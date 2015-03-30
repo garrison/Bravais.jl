@@ -61,24 +61,13 @@ Honeycomb::
 Details
 =======
 
-A Bravais lattice in :math:`d` dimensions is defined to be all points
-:math:`\mathbf{R} = \sum_{i=1}^d n_i \mathbf{a}_i` where each
-:math:`n_i \in \mathbb{Z}`.  The vectors :math:`\mathbf{a}_i` are
-called the "primitive vectors" of the lattice, and there is one for
-each dimension in which the lattice extends.
+A Bravais lattice in :math:`d` dimensions is defined to be all points :math:`\mathbf{R} = \sum_{i=1}^d n_i \mathbf{a}_i` where each :math:`n_i \in \mathbb{Z}`.  The vectors :math:`\mathbf{a}_i` are called the "primitive vectors" of the lattice, and there is one for each dimension in which the lattice extends.
 
-We cannot address (or store information about) an infinite number of
-points on a computer, so instead we label a finite number of points on
-the lattice.  Then we may wish to use "periodic boundary conditions"
-in one or more directions to emulate an infinite number of points.
-(This paragraph needs more work.)
+We cannot address (or store information about) an infinite number of points on a computer, so instead we label a finite number of points on the lattice.  Then we may wish to use "periodic boundary conditions" in one or more directions to emulate an infinite number of points.  (This paragraph needs more work.)
 
-Given positive integers :math:`N_1, \ldots, N_d`, we define a finite
-lattice with :math:`N_\mathrm{tot}=\prod_{i=1}^d N_i` sites, each site given by
-:math:`\mathbf{r}_\alpha = \sum_{i=1}^d n_i \mathbf{a}_i` where
-:math:`n_i \in \mathbb{Z}_{N_i}` and :math:`\alpha = 1, \ldots, N_\mathrm{tot}`.
+Given positive integers :math:`N_1, \ldots, N_d` along with the primitive vectors :math:`\mathbf{a}_i`, we define a finite lattice with :math:`N_\mathrm{tot}=\prod_{i=1}^d N_i` sites, each site given by :math:`\mathbf{r}_\alpha = \sum_{i=1}^d n_i \mathbf{a}_i` where :math:`n_i \in \mathbb{Z}_{N_i}` and :math:`\alpha = 1, \ldots, N_\mathrm{tot}`.
 
-"At this point" explanation needed.
+At this point, the finite lattice only represents a subset of the original lattice sites.  But we would like to in many cases (fully open boundary conditions being the notable exception) repeat our "finite" lattice, tiling it throughout the lattice, such that every site of our original infinite lattice is represented by some site on our finite lattice.  (A diagram may help explain.)
 
 We define vectors :math:`\mathbf{A}_1, \ldots, \mathbf{A}_d`, each of which is some linear combination of the primitive vectors, such that each site on the infinite lattice can be *uniquely* written as :math:`\mathbf{R} = \mathbf{r}_\alpha + \sum_{i=1}^d \tilde{N}_i \mathbf{A}_i`, where :math:`\tilde{N}_i \in \mathbb{Z}`.  There will often (particularly for :math:`d>1`) be infinitely many different ways of choosing these, some of which will result in "helical" (right?) boundary conditions.  (May help to give a few examples here, and diagrams!  May also be good to mention above that in a finite lattice, the actual choice of the primitive vectors is no longer arbitrary.)
 
@@ -90,9 +79,7 @@ The reciprocal lattice is defined as all wave vectors :math:`\mathbf{K}` satisfy
 Allowed momenta
 ---------------
 
-We can choose either periodic/twisted or open boundary conditions (PBC and OBC, respectively) independently in each direction :math:`\mathbf{A}_i`.
-
-For any direction :math:`i` in which there is open boundary conditions, set :math:`M_{ij}=M_{ji}=0\ \forall j` and :math:`\eta_i=0`.  Then :math:`x_i=0` (zero momentum) (FIXME: we have not yet defined :math:`x_i`) is the only unique solution (is it?) in that direction, as we expect.  For the directions in which there are periodic boundary conditions (or, more generally, twisted boundary conditions), the allowed momenta are must be determined, as we now explain.
+We can choose either periodic/twisted or open boundary conditions (PBC and OBC, respectively) independently in each direction :math:`\mathbf{A}_i`.  We will begin by studying the case in which the boundary conditions in each direction are periodic/twisted.  With periodic/twisted boundary conditions on a finite lattice, only certain momenta are possible in the system.  After exploring the case of fully periodic/twisted boundary conditions, we will extend our reasoning to include the (somewhat simpler) case in which one or all dimensions have open boundary conditions.
 
 Recall that `Bloch's theorem <http://en.wikipedia.org/wiki/Bloch_wave>`_ says the eigenstates of a Hamiltonian can be chosen such that each :math:`\psi` is associated with a wave vector :math:`\mathbf{k}` such that :math:`\psi(\mathbf{r} + \mathbf{R}) = e^{i\mathbf{k} \cdot \mathbf{R}}\psi(\mathbf{r})` for every :math:`\mathbf{R}` in the lattice.  (See e.g. Ashcroft and Mermin, page 134.)  Our goal in the following is to determine, given some boundary conditions on a finite lattice, what wave vectors :math:`\mathbf{k}` are allowed.
 
@@ -105,7 +92,7 @@ We define the values :math:`\theta_i` such that
 
 for all :math:`i`.  We can combine our knowledge that :math:`\mathbf{A}_i` is in the lattice with Bloch's theorem to give :math:`e^{i\mathbf{k} \cdot \mathbf{A}_i}\psi(\mathbf{r}) = e^{i\theta_i}\psi(\mathbf{r})`, or equivalently :math:`e^{i\left[ \mathbf{k} \cdot \mathbf{A}_i - \theta_i \right]} = 1`, for all :math:`i`.
 
-We know that the :math:`\mathbf{A}_i`'s must be linear combinations of the primitive vectors, so we can write them as :math:`\mathbf{A}_i = \sum_{j=1}^d M_{ij} \mathbf{a}_j`, where each :math:`M_{ij}` is an integer.  (In fact, our diagonal elements must be :math:`M_{ii} = N_i`, the lattice extent in each direction, unless there is OBC in the :math:`i`'th direction, in which case :math:`M_{ii} = 0`.)  We will also write our wave vector in terms of fractions of the reciprocal lattice's basis vectors: :math:`\mathbf{k} = \sum_{h=1}^d x_h \mathbf{b}_h`.  Then,
+We know that the :math:`\mathbf{A}_i`'s must be linear combinations of the primitive vectors, so we can write them as :math:`\mathbf{A}_i = \sum_{j=1}^d M_{ij} \mathbf{a}_j`, where each :math:`M_{ij}` is an integer.  (For periodic/twisted boundary conditions, our diagonal elements must be :math:`M_{ii} = N_i`, the lattice extent in each direction.  We will see later that for any dimension :math:`i` in which we have open boundary conditions, we instead have :math:`M_{ii} = 0`.)  We will also write our wave vector in terms of fractions of the reciprocal lattice's basis vectors: :math:`\mathbf{k} = \sum_{h=1}^d x_h \mathbf{b}_h`.  Then,
 
 .. math::
    \mathbf{k} \cdot \mathbf{A}_i &= \sum_{h=1}^d \sum_{j=1}^d x_h M_{ij} \mathbf{b}_h \cdot \mathbf{a}_j \\
@@ -123,7 +110,7 @@ for all :math:`i`, where each :math:`\tilde{n}_i` is some nonnegative integer le
 
 which can also be written as a matrix equation, :math:`Mx = \tilde{n} + \eta`.
 
-Let us assume, for vast simplification, that :math:`M_{ij}` is lower triangular (i.e. only the values for which :math:`i \ge j` are allowed to be nonzero).  (This is not a significant restriction, and in many cases the matrix will actually be diagonal.)  We also require that if there are to be open boundary conditions in a given dimension, that the corresponding row and column of :math:`M` must be zero.  We can then solve the above equation iteratively for each :math:`i` beginning with :math:`i=0`.  Rewriting it with this assumption gives:
+Let us assume, for vast simplification, that :math:`M_{ij}` is lower triangular (i.e. only the values for which :math:`i \ge j` are allowed to be nonzero).  (This is not a significant restriction, and in many cases the matrix will actually be diagonal.)  We can then solve the above equation iteratively for each :math:`i` beginning with :math:`i=0`.  Rewriting it with this assumption gives:
 
 .. math::
    \sum_{j=1}^{i} M_{ij} x_j = \tilde{n}_i + \eta_i
@@ -134,6 +121,10 @@ We then solve for :math:`x_i` to give
    x_i = \frac{1}{M_{ii}} \left[ \tilde{n}_i + \eta_i - \sum_{j=1}^{i-1} M_{ij} x_j \right]
 
 which holds for any dimension in which there are periodic/twisted boundary conditions.
+
+Now we briefly consider the case of open boundary conditions.  For any direction :math:`i` in which there is open boundary conditions, set :math:`M_{ij}=M_{ji}=0\ \forall j` (i.e. the corresponding row and column of the matrix :math:`M` must be zero) and :math:`\eta_i=0`.  Then :math:`x_i=0` (zero momentum) is the only unique solution (is it?) in that direction, as we expect.  For the directions in which there are periodic boundary conditions (or, more generally, twisted boundary conditions), the allowed momenta are must be determined, as we now explain.
+
+Number of allowed moment: product over all dimensions with periodic/twisted BC's (FIXME)
 
 For a lattice with a basis, the allowed momenta are given entirely by the underlying Bravais lattice.
 
@@ -189,9 +180,12 @@ As soon as we want to start talking about allowed momenta, the following two thi
 | :math:`M_{ij}` | ``repeater(i, j)``    |
 +----------------+-----------------------+
 
-We put all of these things into the same class.
+Our basic ``BravaisLattice`` type contains all of these things.
 
-We have a ``wrap_around()`` function, which takes a site that may or may not be on the actual finite lattice, and returns its lattice index along with the phase that it picks up.  So for instance given the site :math:`\mathbf{r}_\alpha + \mathbf{A}_i`, it returns the site index :math:`\alpha` of :math:`\mathbf{r}_\alpha` along with the phase :math:`\eta_i` picked up when [un]wrapping the boundary conditions.
+We have a ``wraparound()``  (and ``wraparound!``) function, which takes a site that may or may not be on the actual finite lattice, and returns its lattice index along with the phase that it picks up.  So for instance given the site :math:`\mathbf{r}_\alpha + \mathbf{A}_i`, it returns the site index :math:`\alpha` of :math:`\mathbf{r}_\alpha` along with the phase :math:`\eta_i` picked up when [un]wrapping the boundary conditions.  As above, the phase :math:`\eta_i` returned is defined by
+
+.. math::
+   \psi(\mathbf{r} + \mathbf{A}_i) = e^{2\pi i\eta_i}\psi(\mathbf{r})
 
 There is also a ``translation_operators()`` method, which returns a "translation operator" (really a vector meant for mapping) for each dimension in which :math:`M_{ii}` is nonzero (i.e. for each direction that is not OBC).  So, for instance, ``translation_operators()[i][alpha]`` returns the new site index :math:`\beta` (along with any phase picked up :math:`\eta`) of the site :math:`\mathbf{r}_\alpha + \mathbf{a}_i` such that
 
@@ -201,7 +195,7 @@ There is also a ``translation_operators()`` method, which returns a "translation
 Wrapping condition in second quantization
 -----------------------------------------
 
-We wish to generalize equation (\ref{wraparound_firstquant}) to second quantization.  Note that :math:`\psi(\mathbf{r}) = \langle \mathbf{r} \vert \psi \rangle = \langle 0 \vert c_\mathbf{r} \vert \psi \rangle`.  Using this, we get
+We wish to generalize the above wrapping equation to second quantization.  Note that :math:`\psi(\mathbf{r}) = \langle \mathbf{r} \vert \psi \rangle = \langle 0 \vert c_\mathbf{r} \vert \psi \rangle`.  Using this, we get
 
 .. math::
    \psi(\mathbf{r} + \mathbf{A}_i) = \langle 0 \vert c_{\mathbf{r} + \mathbf{A}_i} \vert \psi \rangle
