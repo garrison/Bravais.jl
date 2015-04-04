@@ -45,7 +45,6 @@ end
 # Julia currently lacks row-major versions of sub2ind and ind2sub.  We
 # want to use these so the ordering for returned tuples is correct;
 # see discussion at <https://github.com/JuliaLang/julia/pull/10337#issuecomment-78206799>.
-rowmajor_sub2ind(dims, indices...) = sub2ind(reverse(dims), reverse(indices)...)
 rowmajor_ind2sub(dims, index) = reverse(ind2sub(reverse(dims), index))
 
 abstract AbstractSiteNetwork <: AbstractVector{Vector{Int}}
@@ -65,6 +64,7 @@ immutable BravaisLattice <: AbstractBravaisLattice
     a::Matrix{Float64}  # primitive lattice vectors
     b::Matrix{Float64}  # reciprocal lattice vectors
     momenta::Matrix{Rational{Int}}  # FIXME: rename x
+    strides::Vector{Int}
 
     function BravaisLattice(N::Vector{Int},
                             M::Matrix{Int}=diagm(N), # assumes pbc
@@ -103,6 +103,8 @@ immutable BravaisLattice <: AbstractBravaisLattice
         for idx in 1:nmomenta
             # FIXME: getting idx should be easier, once
             # multidimensional iteration is supported
+            #
+            # XXX: would we rather order these using rowmajor_ind2sub?
             ñ = [ind2sub(tuple(momenta_range...), idx)...] - 1
             for i in 1:d
                 if M[i,i] == 0
@@ -114,7 +116,15 @@ immutable BravaisLattice <: AbstractBravaisLattice
             end
         end
 
-        new(N_tot, copy(N), copy(M), copy(η), copy(a), b, momenta)
+        # calculate strides
+        strides = zeros(Int, d)
+        s = 1
+        for i in d:-1:1
+            strides[i] = s
+            s *= N[i]
+        end
+
+        new(N_tot, copy(N), copy(M), copy(η), copy(a), b, momenta, strides)
     end
 end
 
@@ -123,6 +133,7 @@ immutable LatticeWithBasis <: AbstractLatticeWithBasis
     maxcoords::Vector{Int}
     bravaislattice::BravaisLattice
     basis::Matrix{Float64}
+    strides::Vector{Int}
 
     function LatticeWithBasis(N::Vector{Int},
                               M::Matrix{Int}=diagm(N), # assumes pbc
@@ -140,7 +151,16 @@ immutable LatticeWithBasis <: AbstractLatticeWithBasis
         N_tot = prod(N) * nbasis
         maxcoords = vcat(N, [nbasis])
 
-        new(N_tot, maxcoords, bravaislattice, copy(basis))
+        # calculate strides
+        strides = zeros(Int, length(maxcoords))
+        strides[end] = 1
+        s = nbasis
+        for i in length(N):-1:1
+            strides[i] = s
+            s *= N[i]
+        end
+
+        new(N_tot, maxcoords, bravaislattice, copy(basis), strides)
     end
 end
 
@@ -154,6 +174,9 @@ bravais(lattice::WrappedLatticeWithBasis) = bravais(lattice.lattice)
 
 LatticeImplUnion = Union(BravaisLattice, LatticeWithBasis)
 WrappedLatticeUnion = Union(WrappedBravaisLattice, WrappedLatticeWithBasis)
+
+_strides(lattice::LatticeImplUnion) = lattice.strides
+_strides(lattice::WrappedLatticeUnion) = _strides(lattice.lattice)
 
 maxcoords(lattice::BravaisLattice) = lattice.N
 maxcoords(lattice::LatticeWithBasis) = lattice.maxcoords
@@ -170,7 +193,7 @@ end
 
 Base.in(site::Vector{Int}, lattice::AbstractLattice) = length(maxcoords(lattice)) == length(site) && all(0 .<= site .< maxcoords(lattice))
 
-Base.findfirst(lattice::AbstractLattice, site::Vector{Int}) = site ∉ lattice ? 0 : rowmajor_sub2ind(tuple(maxcoords(lattice)...), (site + 1)...)
+Base.findfirst(lattice::AbstractLattice, site::Vector{Int}) = site ∉ lattice ? 0 : dot(site, _strides(lattice)) + 1
 
 Base.start(lattice::AbstractLattice) = zeros(Int, length(maxcoords(lattice)))
 Base.done(lattice::AbstractLattice, site::Vector{Int}) = !all(site .< maxcoords(lattice))
