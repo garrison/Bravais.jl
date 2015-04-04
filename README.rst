@@ -2,6 +2,9 @@
 Bravais
 =======
 
+.. image:: https://travis-ci.org/garrison/Bravais.jl.svg?branch=master
+    :target: https://travis-ci.org/garrison/Bravais.jl
+
 A package for working with lattices in `condensed matter physics <http://en.wikipedia.org/wiki/Condensed_matter_physics>`_.
 
 .. NOTE:: This package is a work in progress.
