@@ -14,7 +14,7 @@ A package for working with lattices in `condensed matter physics <http://en.wiki
 
 Lattices are incredibly important in condensed matter physics.  Atoms in a `solid <http://en.wikipedia.org/wiki/Solid>`_ are typically arranged in a lattice, and we can even trap atoms in `optical lattices <http://en.wikipedia.org/wiki/Optical_lattice>`_.  One especially nice thing for computer simulation is that problems on a finite lattice often have finite-dimensional Hilbert spaces.  And for people who are more inclined toward thinking in the continuum: remember that to regularize a quantum field theory, it needs to be able to be defined on a lattice!
 
-http://bravaisjl.readthedocs.org/en/latest/
+Documentation at http://bravaisjl.readthedocs.org/
 
 Goals/Features
 ==============
