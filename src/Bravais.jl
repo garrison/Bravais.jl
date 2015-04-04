@@ -19,8 +19,8 @@
 # of iterating through all of them).  for this, we may actually want
 # to double count (or not).
 
-# FIXME: a wraparound function that returns the number of wraps
-# instead of the phase picked up by the wraps.  Same with translate.
+# FIXME: in lattice w/ basis, be sure to error out anytime the "basis
+# index" is out of range
 
 module Bravais
 
@@ -42,17 +42,14 @@ macro delegate(source, targets)
     return Expr(:block, fdefs...)
 end
 
-# Elementwise floating division is not (yet) implemented in Julia; see
-# https://github.com/JuliaLang/julia/issues/9113
-elementwise_fld(a, b) = [fld(x, y) for (x, y) in zip(a, b)]
-
 # Julia currently lacks row-major versions of sub2ind and ind2sub.  We
 # want to use these so the ordering for returned tuples is correct;
 # see discussion at <https://github.com/JuliaLang/julia/pull/10337#issuecomment-78206799>.
 rowmajor_sub2ind(dims, indices...) = sub2ind(reverse(dims), reverse(indices)...)
 rowmajor_ind2sub(dims, index) = reverse(ind2sub(reverse(dims), index))
 
-abstract AbstractLattice <: AbstractVector{Vector{Int}}
+abstract AbstractSiteNetwork <: AbstractVector{Vector{Int}}
+abstract AbstractLattice <: AbstractSiteNetwork
 
 abstract AbstractBravaisLattice <: AbstractLattice
 abstract AbstractLatticeWithBasis <: AbstractLattice
@@ -155,15 +152,14 @@ bravais(lattice::AbstractBravaisLattice) = lattice
 bravais(lattice::LatticeWithBasis) = lattice.bravaislattice
 bravais(lattice::WrappedLatticeWithBasis) = bravais(lattice.lattice)
 
-# This is not exported (at the moment).  It is used to simplify some
-# code below.
+LatticeImplUnion = Union(BravaisLattice, LatticeWithBasis)
+WrappedLatticeUnion = Union(WrappedBravaisLattice, WrappedLatticeWithBasis)
+
 maxcoords(lattice::BravaisLattice) = lattice.N
 maxcoords(lattice::LatticeWithBasis) = lattice.maxcoords
-maxcoords(lattice::WrappedBravaisLattice) = maxcoords(lattice.lattice)
-maxcoords(lattice::WrappedLatticeWithBasis) = maxcoords(lattice.lattice)
+maxcoords(lattice::WrappedLatticeUnion) = maxcoords(lattice.lattice)
 
-Base.length(lattice::BravaisLattice) = lattice.N_tot
-Base.length(lattice::LatticeWithBasis) = lattice.N_tot
+Base.length(lattice::LatticeImplUnion) = lattice.N_tot
 
 Base.size(lattice::AbstractLattice) = (length(lattice),)
 
@@ -172,9 +168,9 @@ function Base.getindex(lattice::AbstractLattice, index::Integer)
     return [rowmajor_ind2sub(tuple(maxcoords(lattice)...), index)...] - 1
 end
 
-Base.findfirst(lattice::AbstractLattice, site::Vector{Int}) = rowmajor_sub2ind(tuple(maxcoords(lattice)...), (site + 1)...)
-
 Base.in(site::Vector{Int}, lattice::AbstractLattice) = length(maxcoords(lattice)) == length(site) && all(0 .<= site .< maxcoords(lattice))
+
+Base.findfirst(lattice::AbstractLattice, site::Vector{Int}) = site ∉ lattice ? 0 : rowmajor_sub2ind(tuple(maxcoords(lattice)...), (site + 1)...)
 
 Base.start(lattice::AbstractLattice) = zeros(Int, length(maxcoords(lattice)))
 Base.done(lattice::AbstractLattice, site::Vector{Int}) = !all(site .< maxcoords(lattice))
@@ -195,23 +191,36 @@ function Base.next(lattice::AbstractLattice, site::Vector{Int})
     return site, newsite
 end
 
-# FIXME: can we return readonly views of some of the following things?
+# FIXME: can we return readonly array views/proxies of some of the following things?
 
 # FIXME: define (some of) these for LatticeWithBasis.
 dimensions(lattice::BravaisLattice) = lattice.N  # FIXME: rename this `extent`?
+
 ndimensions(lattice::BravaisLattice) = length(lattice.N)
+ndimensions(lattice::LatticeWithBasis) = length(lattice.maxcoords) - 1  # or just use length(twist(lattice))
+ndimensions(lattice::WrappedLatticeUnion) = ndimensions(lattice.lattice)
+
 twist(lattice::BravaisLattice) = lattice.η
+twist(lattice::LatticeWithBasis) = bravais(lattice).η
+twist(lattice::WrappedLatticeUnion) = twist(lattice.lattice)
 repeater(lattice::BravaisLattice) = lattice.M
+repeater(lattice::WrappedBravaisLattice) = repeater(lattice.lattice)
+
+_isdiagonal(mat) = istril(mat) && istriu(mat)
+ishelical(lattice::BravaisLattice) = !_isdiagonal(lattice.M)
 
 # We intentionally define many of the following functions for Bravais
 # lattices only.  If one wants to query them for a lattice with a
 # basis, call e.g. primvecs(bravais(lattice)).
 
-@doc doc"Returns the primitive vectors of the Bravais lattice" ->
+@doc doc"Returns the primitive vectors of the direct lattice" ->
 primvecs(lattice::BravaisLattice) = lattice.a
 
 @doc doc"Returns the primitive vectors of the reciprocal lattice" ->
 recivecs(lattice::BravaisLattice) = lattice.b
+
+nmomenta(lattice::BravaisLattice) = size(lattice.momenta, 2)
+nmomenta(lattice::WrappedBravaisLattice) = nmomenta(lattice.lattice)
 
 momentum(lattice::BravaisLattice, idx) = lattice.momenta[:, idx]
 function momentum(lattice::BravaisLattice, idx, charge::Int)
@@ -228,70 +237,123 @@ function momentum(lattice::BravaisLattice, idx, charge::Int)
     return rv
 end
 
-kdotr(lattice::BravaisLattice, kidx, r::Vector{Int}) = 2pi * dot(momentum(lattice, kidx), r)
-kdotr(lattice::BravaisLattice, kidx, ridx::Integer) = kdotr(kidx, lattice[ridx])
+kdotr(lattice::BravaisLattice, kidx, site::Vector{Int}) = 2pi * dot(momentum(lattice, kidx), site)
+kdotr(lattice::BravaisLattice, kidx, ridx::Integer) = kdotr(lattice, kidx, lattice[ridx])
 
-momentumspace(lattice::BravaisLattice, k::Vector{Int}) = lattice.b * k
-momentumspace(lattice::BravaisLattice, kidx::Integer) = momentumspace(lattice, momentum(lattice, kidx)) 
-# FIXME: make it possible to get points translated to the first brillouin zone
+momentumspace(lattice::BravaisLattice, k::Vector{Rational{Int}}) = lattice.b * k
+momentumspace(lattice::BravaisLattice, kidx::Integer) = momentumspace(lattice, momentum(lattice, kidx))
+momentumspace(lattice::WrappedBravaisLattice, args...) = momentumspace(lattice.lattice, args...)
+# FIXME: make it possible to get momentum-space points translated to the first brillouin zone (momentumspace_bz)
 
-realspace(lattice::BravaisLattice, r::Vector{Int}) = lattice.a * r
-realspace(lattice::BravaisLattice, ridx::Integer) = realspace(lattice, lattice[ridx])
-# FIXME: realspace with M offset
+realspace(lattice::BravaisLattice, site::Vector{Int}) = lattice.a * site
+# NOTE: the following function does not error out if wrap makes no sense due to OBC.
+realspace(lattice::BravaisLattice, site::Vector{Int}, wrap::Vector{Int}) = lattice.a * (site + transpose(lattice.M) * wrap)
 
-# XXX FIXME: test this!!
-function realspace(lattice::LatticeWithBasis, r::Vector{Int})
-    @assert length(r) == length(lattice.maxcoords)
-    return realspace(bravais(lattice), r[1:end-1]) + lattice.basis[:, r[end]+1]
+function realspace(lattice::LatticeWithBasis, site::Vector{Int}, args...)
+    @assert length(site) == length(lattice.maxcoords)
+    return realspace(bravais(lattice), site[1:end-1], args...) + lattice.basis[:, site[end]+1]
 end
-realspace(lattice::LatticeWithBasis, ridx::Integer) = realspace(lattice, lattice[ridx])
 
-function wraparound!(lattice::BravaisLattice, site::Vector{Int})
+realspace(lattice::LatticeImplUnion, ridx::Integer, args...) = realspace(lattice, lattice[ridx], args...)
+
+function wraparound_site!(lattice::LatticeImplUnion, site::Vector{Int})
     d = ndimensions(lattice)
-    @assert length(site) == d
+    mc = maxcoords(lattice)
+    @assert length(site) == length(mc)
 
-    wraps = zeros(Int, d)
+    # For lattice w/ basis, make sure the last index is in range, as
+    # we cannot wrap it around.
+    if typeof(lattice) == LatticeWithBasis
+        if !(0 <= site[end] < mc[end])
+            throw(ArgumentError("Site has invalid basis index."))
+        end
+    end
+
+    wrap = zeros(Int, d)
+
+    N = bravais(lattice).N
+    M = bravais(lattice).M
 
     for i in d:-1:1
-        if !(0 <= site < lattice.N[i])
-            if lattice.M[i,i] != 0
+        if !(0 <= site[i] < N[i])
+            # XXX: be sure to double-check all this logic
+            if M[i,i] != 0
                 # periodic/twisted BC's in this direction
-                wraps[i] = fld(site[j], lattice.N[i])
+                wrap[i] = fld(site[i], N[i])
                 for j in 1:i
-                    site[j] -= wraps[i] * lattice.M[i,j]
+                    site[j] -= wrap[i] * M[i,j]
                 end
             else
                 # OBC in this direction
                 #
                 # XXX: This does not provide any exception guarantee.
                 # If we wanted, we could easily undo what we had done
-                # before throwing.
+                # before throwing.  (Additionally, any mutating
+                # functions that call this may also wish to undo their
+                # side effects before propagating the exception.)
                 throw(ArgumentError("This lattice has open boundary conditions in the direction we are trying to wraparound!"))
             end
         end
     end
 
-    # figure out the phase picked up
-    η = wraps .* lattice.η
+    return site, wrap
+end
+wraparound_site!(lattice::WrappedLatticeUnion, site::Vector{Int}) = wraparound_site!(lattice.lattice, site)
 
-    return site, η
+wraparound_site(lattice::AbstractLattice, site::Vector{Int}) = wraparound_site!(lattice, copy(site))
+wraparound_site(lattice::AbstractLattice, index::Integer) = wraparound_site(lattice, lattice[index])
+
+function wraparound(lattice::AbstractLattice, site_or_index::Union(Vector{Int}, Integer))
+    site, wrap = wraparound_site(lattice, site_or_index)
+    idx = findfirst(lattice, site)
+    return idx, wrap
 end
 
-wraparound(lattice::BravaisLattice, site::Vector{Int}) = wraparound!(lattice, copy(site))
-wraparound(lattice::BravaisLattice, index::Integer) = wraparound(lattice, lattice[index])
+function wraparoundη(lattice::AbstractLattice, site_or_index::Union(Vector{Int}, Integer))
+    idx, wrap = wraparound(lattice, site_or_index)
+    η = dot(wrap, twist(lattice))
+    return idx, η
+end
 
-# FIXME: wraparound for lattice w/ basis
-
-function translate!(lattice::BravaisLattice, site::Vector{Int}, direction::Integer)
-    # FIXME: possibly refuse to translate if M[i,i] == 0
+function translate_site!(lattice::AbstractLattice, site::Vector{Int}, direction::Integer)
+    if !isbravais(lattice) && direction > ndimensions(lattice)
+        throw(ArgumentError("Cannot translate in the 'direction' of the basis index."))
+    end
     site[direction] += 1
-    return wraparound!(lattice, site)
+    return wraparound_site!(lattice, site)
 end
-translate(lattice::BravaisLattice, site::Vector{Int}, direction::Integer) = translate!(lattice, copy(site), direction)
-# FIXME: make the following one return (newridx, η)
-translate(lattice::BravaisLattice, ridx::Integer, direction::Integer) = translate(lattice, lattice[ridx], direction)
 
-#= End BravaisLattice =#
+translate_site(lattice::AbstractLattice, site::Vector{Int}, direction::Integer) = translate_site!(lattice, copy(site), direction)
+translate_site(lattice::AbstractLattice, index::Integer, direction::Integer) = translate_site(lattice, lattice[index], direction)
+
+function translate(lattice::AbstractLattice, site_or_index::Union(Vector{Int}, Integer), direction::Integer)
+    site, wrap = translate_site(lattice, site_or_index, direction)
+    idx = findfirst(lattice, site)
+    return idx, wrap
+end
+
+function translateη(lattice::AbstractLattice, site_or_index::Union(Vector{Int}, Integer), direction::Integer)
+    idx, wrap = translate(lattice, site_or_index, direction)
+    η = dot(wrap, twist(lattice))
+    return idx, η
+end
+
+# symbols we want: whether to double count; also the type of neighbors (e.g. nearest, etc)
+#
+# search for: julia dispatch on symbol
+
+function neighbors(f, lattice::AbstractLattice, neigh=:nearest) # FIXME: ; double_count=false)
+    for ridx in 1:length(lattice)
+        siteneighbors(f, lattice, ridx, neigh)
+    end
+end
+
+function neighborsη(f, lattice::AbstractLattice, neigh=:nearest) # FIXME: ; double_count=false)
+    neighbors(lattice, neigh) do idx1, idx2, wrap
+        η = dot(wrap, twist(lattice))
+        f(idx1, idx2, η)
+    end
+end
 
 #= Begin specific Bravais lattice implementations =#
 
@@ -305,23 +367,38 @@ immutable HypercubicLattice <: WrappedBravaisLattice
     end
 end
 
-function nearestneighbors(f, lattice::HypercubicLattice)
-    # NOTE: iterates each bond once.
-    for site in lattice
+# FIXME: do the wrapping etc in a common function for all lattice
+# types.  then the siteneighbors function (or `siteneighbordsimpl`)
+# can be specified even more simply.
+
+# BASICALLY: give two things: single count and double count offsets.
+# also, for each basis index.  then again, this generic code is not
+# going to be quite as optimized as e.g. the hypercubic lattice.  but
+# that is okay, i can just have special code for that.
+
+# XXX FIXME: we want to be able (in the end) to choose different
+# primitive vectors so we can have a weird helical lattice.  how are
+# we going to support this??
+
+function siteneighbors(f, lattice::HypercubicLattice, ridx::Integer, neigh=:nearest) # FIXME: ; double_count=false)
+    M = lattice.lattice.M
+    mc = maxcoords(lattice)
+
+    site = lattice[ridx]
+
+    if neigh == :nearest
         for i in 1:ndimensions(lattice)
             newsite = copy(site)
             newsite[i] += 1
-            # FIXME: instead of `wrap`, why not eta?  well, "wrap"
-            # allows me to do something special for 2-leg ladder.
-            #
-            # FIXME: in directions w/ OBC, do not provide the neighbors!
-            #
-            # FIXME: also, this elementwise_fld does not consider
-            # helical boundaries (correct?)
-            wrap = elementwise_fld(newsite, dimensions(lattice))
-            newsite -= wrap .* dimensions(lattice)
-            f(findfirst(lattice, site), findfirst(lattice, newsite), wrap)
+            if M[i,i] <= 1 && newsite[i] >= mc[i]
+                # In directions w/ OBC or length one, do not provide the neighbors!
+                continue
+            end
+            newidx, wrap = wraparound(lattice, newsite)
+            f(ridx, newidx, wrap)
         end
+    else
+        throw(ArgumentError("Invalid neighbor type: $neigh"))
     end
 end
 
@@ -336,19 +413,38 @@ immutable TriangularLattice <: WrappedBravaisLattice
     end
 end
 
-function nearestneighbors(f, lattice::TriangularLattice)
-    # FIXME: make it work like the hypercubic thing above
-    for site in lattice
-        for offset in ([1,0], [0,1], [-1,1])
+isbipartite(lattice::TriangularLattice) = false # although technically it might be if it's just a chain
+
+# FIXME: many of these neighbor functions can use special handling when the lattice height or width is 1 in a direction.
+
+function siteneighbors(f, lattice::TriangularLattice, ridx::Integer, neigh=:nearest) # FIXME: ; double_count=false)
+    M = lattice.lattice.M
+    mc = maxcoords(lattice)
+
+    site = lattice[ridx]
+
+    if neigh == :nearest
+        offsets = ([1,0], [0,1], [-1,1])
+        for offset in offsets
             newsite = site + offset
-            wrap = elementwise_fld(newsite, dimensions(lattice))
-            newsite -= wrap .* dimensions(lattice)
-            f(findfirst(lattice, site), findfirst(lattice, newsite), wrap)
+            g(i) = M[i,i] == 0 && !(0 <= newsite[i] < mc[i])
+            if g(1) || g(2)
+                # In directions w/ OBC, do not provide the neighbors!
+                #
+                # NOTE: In e.g. a 3d lattice, similar logic will fail
+                # if there's one OBC direction and helical BCs in the
+                # two periodic directions.
+                continue
+            end
+            newidx, wrap = wraparound(lattice, newsite)
+            f(ridx, newidx, wrap)
         end
+    else
+        throw(ArgumentError("Invalid neighbor type: $neigh"))
     end
 end
 
-@delegate WrappedBravaisLattice.lattice [ Base.length, dimensions, ndimensions, twist, repeater, primvecs, recivecs, momentum, kdotr, momentumspace, realspace, wraparound!, wraparound, translate!, translate ]
+@delegate WrappedBravaisLattice.lattice [ Base.length, dimensions, ndimensions, twist, repeater, primvecs, recivecs, momentum, kdotr, momentumspace, realspace ]
 
 #= End specific Bravais lattice implementations =#
 
@@ -367,6 +463,38 @@ immutable HoneycombLattice <: WrappedLatticeWithBasis
     end
 end
 
+function siteneighbors(f, lattice::HoneycombLattice, ridx::Integer, neigh=:nearest; double_count=false)
+    M = bravais(lattice).M
+    mc = maxcoords(lattice)
+
+    site = lattice[ridx]
+
+    if neigh == :nearest
+        if site[end] == 0
+            offsets = ([0, 0, 1], [-1, 0, 1], [-1, 1, 1])
+        else
+            @assert site[end] == 1
+            offsets = double_count ? () : ([0, 0, -1], [1, 0, -1], [1, -1, -1])
+        end
+        for offset in offsets
+            newsite = site + offset
+            g(i) = M[i,i] == 0 && !(0 <= newsite[i] < mc[i])
+            if g(1) || g(2)
+                # In directions w/ OBC, do not provide the neighbors!
+                #
+                # NOTE: In e.g. a 3d lattice, similar logic will fail
+                # if there's one OBC direction and helical BCs in the
+                # two periodic directions.
+                continue
+            end
+            newidx, wrap = wraparound(lattice, newsite)
+            f(ridx, newidx, wrap)
+        end
+    else
+        throw(ArgumentError("Invalid neighbor type: $neigh"))
+    end
+end
+
 immutable KagomeLattice <: WrappedLatticeWithBasis
     lattice::LatticeWithBasis
 
@@ -380,10 +508,44 @@ immutable KagomeLattice <: WrappedLatticeWithBasis
     end
 end
 
+function siteneighbors(f, lattice::KagomeLattice, ridx::Integer, neigh=:nearest) #; double_count=false)
+    M = bravais(lattice).M
+    mc = maxcoords(lattice)
+
+    site = lattice[ridx]
+
+    if neigh == :nearest
+        if site[end] == 0
+            offsets = ([0, 0, 1], [0, -1, 1])
+        elseif site[end] == 1
+            offsets = ([0, 0, 1], [-1, 1, 1])
+        else
+            @assert site[end] == 2
+            offsets = ([0, 0, -2], [1, 0, -2])
+        end
+        for offset in offsets
+            newsite = site + offset
+            g(i) = M[i,i] == 0 && !(0 <= newsite[i] < mc[i])
+            if g(1) || g(2)
+                # In directions w/ OBC, do not provide the neighbors!
+                #
+                # NOTE: In e.g. a 3d lattice, similar logic will fail
+                # if there's one OBC direction and helical BCs in the
+                # two periodic directions.
+                continue
+            end
+            newidx, wrap = wraparound(lattice, newsite)
+            f(ridx, newidx, wrap)
+        end
+    else
+        throw(ArgumentError("Invalid neighbor type: $neigh"))
+    end
+end
+
 @delegate WrappedLatticeWithBasis.lattice [ Base.length, realspace ]
 
 #= End specific lattice w/ basis implementations =#
 
-export AbstractLattice, BravaisLattice, HypercubicLattice, TriangularLattice, LatticeWithBasis, HoneycombLattice, KagomeLattice, dimensions, ndimensions, momentum, kdotr, realspace, momentumspace, nearestneighbors
+export AbstractLattice, BravaisLattice, HypercubicLattice, TriangularLattice, LatticeWithBasis, HoneycombLattice, KagomeLattice, bravais, isbravais, maxcoords, ndimensions, dimensions, twist, repeater, nmomenta, momentum, kdotr, realspace, wraparound_site!, wraparound_site, wraparound, wraparoundη, translate_site!, translate_site, translate, translateη, momentumspace, siteneighbors, neighbors, isbipartite
 
 end # module

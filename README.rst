@@ -4,32 +4,34 @@ Bravais
 
 A package for working with lattices in `condensed matter physics <http://en.wikipedia.org/wiki/Condensed_matter_physics>`_.
 
-Lattices are incredibly important.  Atoms in a `solid <http://en.wikipedia.org/wiki/Solid>`_ are typically arranged in a lattice, and we can even construct `optical lattices <http://en.wikipedia.org/wiki/Optical_lattice>`_.  In addition, problems in condensed matter physics on a finite lattice often have finite-size Hilbert spaces.  And to regularize a quantum field theory, it needs to be defined on a lattice!
+.. NOTE:: This package is a work in progress.
+
+Lattices are incredibly important in condensed matter physics.  Atoms in a `solid <http://en.wikipedia.org/wiki/Solid>`_ are typically arranged in a lattice, and we can even trap atoms in `optical lattices <http://en.wikipedia.org/wiki/Optical_lattice>`_.  One especially nice thing for computer simulation is that problems on a finite lattice often have finite-dimensional Hilbert spaces.  And for people who are more inclined toward thinking in the continuum: remember that to regularize a quantum field theory, it needs to be able to be defined on a lattice!
 
 Goals/Features
 ==============
 
 We want to support a variety of different lattice types in an arbitrary number of dimensions, including:
 
-- Bravais lattices (e.g. hypercubic, triangular) as well as lattices with a basis (e.g. honeycomb, kagome, pyrochlore).
+- Bravais lattices (e.g. hypercubic, triangular, face-centered cubic, body-centered cubic) as well as lattices with a basis (e.g. honeycomb, kagome, diamond, pyrochlore).
 - Arbitrary boundary conditions (open, periodic, antiperiodic, or [more generally] twisted), independently in each dimension.
 - Helical boundaries, where translating the length of the lattice in one dimension also leads to an offset in another dimension(s).
 - Other, user-configurable lattices, provided the primitive vectors and basis vectors are given.
 
 For a given lattice, we want to be able to easily query/calculate the following:
 
-- Provide a systematic enumeration of the sites of the lattice, allowing mapping between indices and site labels.
-- Ability to query coordinates a lattice site in real space.
-- Allows one to perform translation operations on a site, getting both the new site and what wraps were done.  This is useful for computational methods that are able to take advantage of the discrete translational symmetry of the lattice.
-- Allows one to determine (and enumerate) the allowed momenta of a system, based on the boundary conditions.
-- Query the nearest neighbors of a site for common lattices
+- Provide a systematic enumeration of the sites of the lattice, allowing mapping between indices and site labels (aka coordinates in terms of the primitive vectors).
+- Ability to query the actual real-space coordinates of each lattice site.
+- Ability to perform translation operations on a site, getting both the new site and what wrap(s) around the boundary were necessary.  This is useful for computational methods that are able to take advantage of the discrete translational symmetry of the lattice.
+- Ability to determine (and enumerate) the allowed momenta of a system, based on the boundary conditions.
+- Mechanism for querying the nearest neighbors of a site for common lattices.
 - Given a momentum :math:`\mathbf{k}_i` and site :math:`\mathbf{r}_j`, calculate dot products :math:`\mathbf{k}_i \cdot \mathbf{r}_j`.
-- Plotting a lattice, its reciprocal lattice, and the first `Brillouin Zone (BZ) <http://en.wikipedia.org/wiki/Brillouin_zone>`_.
+- Routines for plotting a lattice, its reciprocal lattice, and the first `Brillouin Zone (BZ) <http://en.wikipedia.org/wiki/Brillouin_zone>`_.
 
 Getting started
 ===============
 
-To install and import::
+To install, test, and import::
 
   Pkg.clone("https://github.com/garrison/Bravais.jl.git")
   Pkg.test("Bravais")
@@ -37,6 +39,8 @@ To install and import::
 
 Example lattices
 ----------------
+
+Lattice construction is fairly simple.  Some examples below.
 
 A 1D chain with open boundary conditions::
 
@@ -50,11 +54,11 @@ A 2D "cylinder"::
 
   HypercubicLattice([12, 4], diagm([12, 0]))
 
-A 2D triangular (aka hexagonal) lattice::
+A 2D triangular (aka hexagonal) lattice with PBC::
 
   TriangularLattice([4,6])
 
-Honeycomb::
+Honeycomb with PBC::
 
   HoneycombLattice([3,5])
 
@@ -74,7 +78,7 @@ We define vectors :math:`\mathbf{A}_1, \ldots, \mathbf{A}_d`, each of which is s
 The reciprocal lattice
 ----------------------
 
-The reciprocal lattice is defined as all wave vectors :math:`\mathbf{K}` satisfying :math:`e^{i\mathbf{K}\cdot\mathbf{R}}=1` for all points :math:`\mathbf{R}` in the infinite Bravais lattice.  In other words, we require :math:`\mathbf{K} \cdot \mathbf{R} = 2\pi M` for some :math:`M \in \mathbb{Z}`.  This can best be achieved by choosing the reciprocal lattice's basis vectors :math:`\mathbf{b}_j` such that :math:`\mathbf{a}_i \cdot \mathbf{b}_j = 2\pi \delta_{ij}`.  Then each :math:`\mathbf{K}` can be written as :math:`\mathbf{K} = \sum_{j=1}^d m_j \mathbf{b}_j` with :math:`m_j \in \mathbb{Z}`.  This gives :math:`\mathbf{K} \cdot \mathbf{R} = \sum_{i=1}^d\sum_{j=1}^d n_i m_j \, \mathbf{a}_i \cdot \mathbf{b}_j = 2\pi \sum_{i=1}^d m_i n_i`, which will always satisfy the original condition :math:`e^{i\mathbf{K}\cdot\mathbf{R}}=1`.  For more details, see Ashcroft and Mermin pages 86-87.
+The reciprocal lattice is defined as all wave vectors :math:`\mathbf{K}` satisfying :math:`e^{i\mathbf{K}\cdot\mathbf{R}}=1` for all points :math:`\mathbf{R}` in the infinite Bravais lattice.  In other words, we require :math:`\mathbf{K} \cdot \mathbf{R} = 2\pi M` for some :math:`M \in \mathbb{Z}`.  This can best be achieved by choosing the reciprocal lattice's primitive vectors :math:`\mathbf{b}_j` such that :math:`\mathbf{a}_i \cdot \mathbf{b}_j = 2\pi \delta_{ij}`.  Then each :math:`\mathbf{K}` can be written as :math:`\mathbf{K} = \sum_{j=1}^d m_j \mathbf{b}_j` with :math:`m_j \in \mathbb{Z}`.  This gives :math:`\mathbf{K} \cdot \mathbf{R} = \sum_{i=1}^d\sum_{j=1}^d n_i m_j \, \mathbf{a}_i \cdot \mathbf{b}_j = 2\pi \sum_{i=1}^d m_i n_i`, which will always satisfy the original condition :math:`e^{i\mathbf{K}\cdot\mathbf{R}}=1`.  For more details, see Ashcroft and Mermin pages 86-87.
 
 Allowed momenta
 ---------------
@@ -83,7 +87,9 @@ We can choose either periodic/twisted or open boundary conditions (PBC and OBC, 
 
 Recall that `Bloch's theorem <http://en.wikipedia.org/wiki/Bloch_wave>`_ says the eigenstates of a Hamiltonian can be chosen such that each :math:`\psi` is associated with a wave vector :math:`\mathbf{k}` such that :math:`\psi(\mathbf{r} + \mathbf{R}) = e^{i\mathbf{k} \cdot \mathbf{R}}\psi(\mathbf{r})` for every :math:`\mathbf{R}` in the lattice.  (See e.g. Ashcroft and Mermin, page 134.)  Our goal in the following is to determine, given some boundary conditions on a finite lattice, what wave vectors :math:`\mathbf{k}` are allowed.
 
-There will be as many allowed momenta as there are points on the finite lattice ASSUMING PBC IN EACH DIRECTION.  Typically allowed momenta are given by points within the first Brillouin Zone.  We want to uniquely label them, but for simplicity we will label them systematically without the requirement that they be in the *first* Brillouin Zone.
+For a Bravais lattice, there will be as many allowed momenta as there are points on the finite lattice ASSUMING PBC IN EACH DIRECTION.  Typically, allowed momenta are given by points within the first Brillouin Zone.  We want to uniquely label them, but for simplicity we will label them systematically without the requirement that they be in the *first* Brillouin Zone.
+
+FIXME: move these math details to an "appendix"
 
 We define the values :math:`\theta_i` such that
 
@@ -110,7 +116,7 @@ for all :math:`i`, where each :math:`\tilde{n}_i` is some nonnegative integer le
 
 which can also be written as a matrix equation, :math:`Mx = \tilde{n} + \eta`.
 
-Let us assume, for vast simplification, that :math:`M_{ij}` is lower triangular (i.e. only the values for which :math:`i \ge j` are allowed to be nonzero).  (This is not a significant restriction, and in many cases the matrix will actually be diagonal.)  We can then solve the above equation iteratively for each :math:`i` beginning with :math:`i=0`.  Rewriting it with this assumption gives:
+Let us assume in ``Bravais.jl``, for vast simplification, that :math:`M_{ij}` is lower triangular (i.e. only the values for which :math:`i \ge j` are allowed to be nonzero).  (This is not a significant restriction, and in many cases the matrix will actually be diagonal.)  We can then solve the above equation iteratively for each :math:`i` beginning with :math:`i=0`.  Rewriting it with this assumption gives:
 
 .. math::
    \sum_{j=1}^{i} M_{ij} x_j = \tilde{n}_i + \eta_i
@@ -124,7 +130,7 @@ which holds for any dimension in which there are periodic/twisted boundary condi
 
 Now we briefly consider the case of open boundary conditions.  For any direction :math:`i` in which there is open boundary conditions, set :math:`M_{ij}=M_{ji}=0\ \forall j` (i.e. the corresponding row and column of the matrix :math:`M` must be zero) and :math:`\eta_i=0`.  Then :math:`x_i=0` (zero momentum) is the only unique solution (is it?) in that direction, as we expect.  For the directions in which there are periodic boundary conditions (or, more generally, twisted boundary conditions), the allowed momenta are must be determined, as we now explain.
 
-Number of allowed moment: product over all dimensions with periodic/twisted BC's (FIXME)
+Number of allowed momenta: product over all dimensions with periodic/twisted BC's (FIXME).  In other words, the product of all nonzero diagonal elements of :math:`M`.
 
 For a lattice with a basis, the allowed momenta are given entirely by the underlying Bravais lattice.
 
@@ -133,12 +139,17 @@ Just like the lattice sites themselves, the `Bravais` package provides enumerati
 Allowed total momenta
 ---------------------
 
-The above considers the allowed momenta of the single particle problem.  If we have multiple particles, we may wish to determine the possible *total momenta*.  They are given as follows, where :math:`c` is the "charge" (i.e. particle count).
+FIXME: move this below with second quantization stuff?
+
+The above considers the allowed momenta of the single particle problem.  For a single particle, if we translate the length of the sstem in the :math:`i` direction, we will pick up a phase :math:`e^{i\theta_i}`.  More generally (i.e. in second quantization), with particle count :math:`c`, translating all particles the length of the system will pick up a phase :math:`e^{ci\theta_i}`.  If we have multiple particles, we may wish to determine the possible *total momenta*.  They are given as follows, where :math:`c` is the "charge" (i.e. particle count).
 
 .. math::
    x_i^\prime = x_i + (c-1) \frac{\eta_i}{M_{ii}}
 
-For OBC, the denominator blows up, but it should be obvious that :math:`x_i^\prime = 0`.
+For OBC, the denominator technically blows up, but it should be obvious that :math:`x_i^\prime = 0`.
+
+Lattice with a basis
+--------------------
 
 Generic lattice code
 --------------------
@@ -195,6 +206,8 @@ There is also a ``translation_operators()`` method, which returns a "translation
 Wrapping condition in second quantization
 -----------------------------------------
 
+[FIXME: does this belong here?  Nothing in the Bravais.jl code contains the idea of second quantization, except potentially the momentum for a given charge.  Perhaps this should be moved to ExactDiag.]
+
 We wish to generalize the above wrapping equation to second quantization.  Note that :math:`\psi(\mathbf{r}) = \langle \mathbf{r} \vert \psi \rangle = \langle 0 \vert c_\mathbf{r} \vert \psi \rangle`.  Using this, we get
 
 .. math::
@@ -216,10 +229,19 @@ As a result of this,
 
 when working in second quantization.  (Explain this.)  where :math:`N_c` is the "charge" (poorly chosen name, which should be updated.)
 
+API Reference
+=============
+
+realspace()
+-----------
+
+momentum() function, kdotr
+--------------------------
+
 nearest_neighbors() functions
 -----------------------------
 
-Returns (via a callback) :math:`i`, :math:`j`, and :math:`\eta`, such that the relevant hopping term would be :math:`e^{2\pi\eta}c_i^\dagger c_j`.
+Returns (via a callback) :math:`i`, :math:`j`, and :math:`\eta`, such that the relevant hopping term would be :math:`e^{2\pi\eta}c_i^\dagger c_j`. (FIXME, I have changed this.)
 
 Specific lattice implementations
 --------------------------------
