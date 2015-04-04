@@ -2,8 +2,8 @@
 Bravais
 =======
 
-.. image:: https://travis-ci.org/garrison/Bravais.jl.svg?branch=master
-    :target: https://travis-ci.org/garrison/Bravais.jl
+.. image:: https://travis-ci.org/garrison/Bravais.jl.svg?branch=master :target: https://travis-ci.org/garrison/Bravais.jl
+.. image:: https://coveralls.io/repos/garrison/Bravais.jl/badge.svg :target: https://coveralls.io/r/garrison/Bravais.jl
 
 A package for working with lattices in `condensed matter physics <http://en.wikipedia.org/wiki/Condensed_matter_physics>`_.
 
