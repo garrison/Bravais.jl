@@ -103,9 +103,7 @@ immutable BravaisLattice <: AbstractBravaisLattice
         for idx in 1:nmomenta
             # FIXME: getting idx should be easier, once
             # multidimensional iteration is supported
-            #
-            # XXX: would we rather order these using rowmajor_ind2sub?
-            ñ = [ind2sub(tuple(momenta_range...), idx)...] - 1
+            ñ = [rowmajor_ind2sub(tuple(momenta_range...), idx)...] - 1
             for i in 1:d
                 if M[i,i] == 0
                     momenta[i,idx] = 0
