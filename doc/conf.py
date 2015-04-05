@@ -32,6 +32,7 @@ import juliadoc
 # ones.
 extensions = [
     'sphinx.ext.pngmath',
+    'sphinx.ext.todo',
     'juliadoc.julia',
     'juliadoc.jlhelp',
 ]
