@@ -78,7 +78,7 @@ immutable BravaisLattice <: AbstractBravaisLattice
 
         # check M
         @assert size(M) == (d, d)
-        @assert M == tril(M)
+        @assert istril(M)
         for i in 1:d
             @assert M[i,i] == 0 || M[i,i] == N[i]
             if M[i,i] != N[i]
