@@ -101,7 +101,7 @@ Allowed total momenta
 .. todo::
    Move this below with second quantization stuff?
 
-The above discussion considers the allowed momenta of a single particle wavefunction.  In particular, for a single particle, if we translate the length of the system in the :math:`i` direction, we pick up a phase :math:`e^{2\pi i\eta_i}`.  More generally (i.e. in second quantization), with particle count :math:`c`, translating all particles the length of the system will pick up a phase :math:`e^{2\pi i\eta_i c}`.  If we have multiple particles, we may wish to determine the possible *total momenta*.  They are given as follows, where :math:`c` is the "charge" (i.e. particle count).
+The above discussion considers the allowed momenta of a single particle wavefunction.  In particular, for a single particle, if we translate the length of the system in the :math:`i` direction, we pick up a phase :math:`e^{2\pi i\eta_i}`.  More generally (i.e. in second quantization), with particle count :math:`c`, translating all particles the length of the system will pick up a phase :math:`e^{2\pi i\eta_i c}`.  Thus, in a system where we have multiple particles, we may wish to determine the possible *total momenta*.  They are given as follows, where :math:`c` is the "charge" (i.e. particle count).
 
 .. math::
    x_i^\prime = x_i + (c-1) \frac{\eta_i}{M_{ii}}
@@ -114,7 +114,7 @@ Lattice with a basis
 Generic lattice code
 --------------------
 
-OK, so what do we need to determine a lattice?  :math:`\mathbf{a}_i`, :math:`\mathbf{b}_i`, :math:`N_i`, :math:`\eta_i`, and the lower triangular matrix :math:`M_{ij}`.  Note for the diagonal elements that :math:`M_{ii} = N_i` (for periodic or twisted boundary conditions) or :math:`M_{ii} = 0` (for open boundary conditions).  We also rely on the user implementing the lattice type to specify the concept of "nearest neighbors", as what is meant by the :math:`n`'th nearest neighbors depends on the details of the lattice spacing in each direction.
+OK, so what do we need to determine a lattice?  :math:`\mathbf{a}_i`, :math:`\mathbf{b}_i`, :math:`N_i`, :math:`\eta_i`, and the lower triangular matrix :math:`M_{ij}`.  Note for the diagonal elements that :math:`M_{ii} = N_i` (for periodic or twisted boundary conditions) or :math:`M_{ii} = 0` (for open boundary conditions).  For simplicity we assume that :math:`0 \le \eta_i < 1\ \forall i`.  We rely on the user implementing the lattice type to specify the concept of "nearest neighbors", as what is meant by the :math:`n`'th nearest neighbors depends on the details of the lattice spacing in each direction.
 
 Here's a table for our variables and what symbols are used in the code
 
@@ -144,17 +144,19 @@ And we are going to want to be able to talk about realizations of these lattice 
 
 As soon as we want to start talking about allowed momenta, the following two things matter as well.
 
-+----------------+-----------------------+
-| Symbol         | Variable name         |
-+================+=======================+
-| :math:`\eta_i` | ``eta[i]``            |
-+----------------+-----------------------+
-| :math:`M_{ij}` | ``repeater(i, j)``    |
-+----------------+-----------------------+
++----------------+--------------------------------+----------------------------+
+| Symbol         | Internal variable name         |                            |
++================+================================+============================+
+| :math:`\eta_i` | ``η[i]``                       | ``twist(lattice)[i]``      |
++----------------+--------------------------------+----------------------------+
+| :math:`M_{ij}` | ``M[i,j]``                     | ``repeater(lattice)[i,j]`` |
++----------------+--------------------------------+----------------------------+
 
 Our basic ``BravaisLattice`` type contains all of these things.
 
-We have a ``wraparound()``  (and ``wraparound!``) function, which takes a site that may or may not be on the actual finite lattice, and returns its lattice index along with the phase that it picks up.  So for instance given the site :math:`\mathbf{r}_\alpha + \mathbf{A}_i`, it returns the site index :math:`\alpha` of :math:`\mathbf{r}_\alpha` along with the phase :math:`\eta_i` picked up when [un]wrapping the boundary conditions.  As above, the phase :math:`\eta_i` returned is defined by
+One important thing we'd like to be able to do is map sites on the finite lattice to/from sites on the infinite lattice.
+
+We have a ``wraparound()``  (and ``wraparound_site!``, and ``wraparoundη``) function, which takes a site that may or may not be on the actual finite lattice, and returns its lattice index along with the phase that it picks up.  So for instance given the site :math:`\mathbf{r}_\alpha + \mathbf{A}_i`, it returns the site index :math:`\alpha` of :math:`\mathbf{r}_\alpha` along with the phase :math:`\eta_i` picked up when [un]wrapping the boundary conditions.  As above, the phase :math:`\eta_i` returned is defined by
 
 .. math::
    \psi(\mathbf{r} + \mathbf{A}_i) = e^{2\pi i\eta_i}\psi(\mathbf{r})
