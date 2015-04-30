@@ -227,8 +227,7 @@ twist(lattice::WrappedLatticeUnion) = twist(lattice.lattice)
 repeater(lattice::BravaisLattice) = lattice.M
 repeater(lattice::WrappedBravaisLattice) = repeater(lattice.lattice)
 
-_isdiagonal(mat) = istril(mat) && istriu(mat)
-ishelical(lattice::BravaisLattice) = !_isdiagonal(lattice.M)
+ishelical(lattice::BravaisLattice) = !isdiag(lattice.M)
 
 # We intentionally define many of the following functions for Bravais
 # lattices only.  If one wants to query them for a lattice with a
