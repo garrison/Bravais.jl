@@ -131,12 +131,12 @@ for lattice in lattices
 
         # Initialize our array of each index, along with a beginning
         # phase of zero
-        indices = (Int, Rational{Int})[(z, 0//1) for z in 1:sz]
+        indices = @compat Tuple{Int, Rational{Int}}[(z, 0//1) for z in 1:sz]
 
         # Translate as many times as we need to in each dimension
         for j in 1:d
             for z in 1:M[i,j]
-                new_indices = (Int, Rational{Int})[]
+                new_indices = @compat Tuple{Int, Rational{Int}}[]
                 sizehint!(new_indices, sz)
                 for (s, old_η) in indices
                     newidx, wrap_η = translateη(lattice, s, j)
