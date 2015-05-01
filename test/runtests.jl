@@ -442,6 +442,14 @@ for (i, site) in enumerate(lattice)
     @test sublattice_index(lattice, i) == sublattice_index(lattice, site) == site[end] == ((i $ 1) & 1)
 end
 
+lattice = KagomeLattice([4,3])
+@test !isbipartite(lattice)
+@test istripartite(lattice)
+test_neighbor_sublattices(lattice, :nearest, [0,1,2])
+for (i, site) in enumerate(lattice)
+    @test sublattice_index(lattice, i) == sublattice_index(lattice, site) == site[end]
+end
+
 function test_neighbor_distances(lattice, neigh, expected=1.0)
     expected_squared = expected ^ 2
     neighbors(lattice, neigh) do i, j, wrap
