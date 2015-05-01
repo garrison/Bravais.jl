@@ -127,6 +127,14 @@ for lattice in lattices
                     exp3 = exp(im * (kdotr(lattice, k_idx, idx) + 2π * η_wrap))
                     @test_approx_eq exp1 exp2
                     @test_approx_eq exp1 exp3
+                    for charge in (1, 3)
+                        k_total = momentum(lattice, k_idx, charge)
+                        exp1 = exp(im * (kdotr(lattice, k_total, site) + 2π * η[i] * charge))
+                        exp2 = exp(im * kdotr(lattice, k_total, site2))
+                        exp3 = exp(im * (kdotr(lattice, k_total, idx) + 2π * η_wrap * charge))
+                        @test_approx_eq exp1 exp2
+                        @test_approx_eq exp1 exp3
+                     end
                 end
             end
         end

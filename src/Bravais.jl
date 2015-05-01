@@ -255,20 +255,27 @@ nmomenta(lattice::WrappedBravaisLattice) = nmomenta(lattice.lattice)
 momentum(lattice::BravaisLattice, idx) = lattice.momenta[:, idx]
 function momentum(lattice::BravaisLattice, idx, charge::Int)
     # "total momentum", really.  note that this may return things greater than one.
-    rv = momentum(lattice, idx)
+    x1 = momentum(lattice, idx)
     if charge == 1
-        return rv
+        return x1
     end
-    for i in 1:length(lattice.N)
+    d = length(lattice.N)
+    offsets = zeros(Rational{Int}, d)
+    for i in 1:d
         if lattice.M[i,i] != 0
-            rv[i] += lattice.η[i] * (charge - 1) // lattice.M[i,i]
+            offsets[i] = lattice.η[i] * (charge - 1)
+            for j in 1:i-1
+                offsets[i] -= lattice.M[i,j] * offsets[j]
+            end
+            offsets[i] = offsets[i] // lattice.M[i,i]
         end
     end
-    return rv
+    return x1 + offsets
 end
 
-kdotr(lattice::BravaisLattice, kidx, site::Vector{Int}) = 2pi * dot(momentum(lattice, kidx), site)
-kdotr(lattice::BravaisLattice, kidx, ridx::Integer) = kdotr(lattice, kidx, lattice[ridx])
+kdotr(lattice::BravaisLattice, ksite::Vector{Rational{Int}}, site::Vector{Int}) = 2pi * dot(ksite, site)
+kdotr(lattice::BravaisLattice, kidx::Integer, site::Vector{Int}) = kdotr(lattice, momentum(lattice, kidx), site)
+kdotr(lattice::BravaisLattice, k, ridx::Integer) = kdotr(lattice, k, lattice[ridx])
 
 momentumspace(lattice::BravaisLattice, k::Vector{Rational{Int}}) = lattice.b * k
 momentumspace(lattice::BravaisLattice, kidx::Integer) = momentumspace(lattice, momentum(lattice, kidx))

@@ -101,12 +101,18 @@ Allowed total momenta
 .. todo::
    Move this below with second quantization stuff?
 
-The above discussion considers the allowed momenta of a single particle wavefunction.  In particular, for a single particle, if we translate the length of the system in the :math:`i` direction, we pick up a phase :math:`e^{2\pi i\eta_i}`.  More generally (i.e. in second quantization), with particle count :math:`c`, translating all particles the length of the system will pick up a phase :math:`e^{2\pi i\eta_i c}`.  Thus, in a system where we have multiple particles, we may wish to determine the possible *total momenta*.  They are given as follows, where :math:`c` is the "charge" (i.e. particle count).
+The above discussion considers the allowed momenta of a single particle wavefunction.  In particular, for a single particle, if we translate the length of the system in the :math:`i` direction, we pick up a phase :math:`e^{2\pi i\eta_i}`.  More generally (i.e. in second quantization), with particle count :math:`c`, translating all particles the length of the system will pick up a phase :math:`e^{2\pi i\eta_i c}`.  Thus, in a system where we have multiple particles, we may wish to determine the possible *total momenta*.  We define :math:`x^{(c)}_i` to be the total momenta with "charge" (i.e. particle count) :math:`c`.  (What we previously called :math:`x_i` above is now :math:`x^{(1)}_i`.)  We first generalize the above equation for arbitrary charge:
 
 .. math::
-   x_i^\prime = x_i + (c-1) \frac{\eta_i}{M_{ii}}
+   x^{(c)}_i = \frac{1}{M_{ii}} \left[ \tilde{n}_i + c\eta_i - \sum_{j=1}^{i-1} M_{ij} x^{(c)}_j \right]
 
-For OBC, the denominator technically blows up, but it should be obvious that :math:`x_i^\prime = 0`.
+
+From this we can derive a recursion relation for :math:`x^{(c)}_i - x^{(1)}_i`:
+
+.. math::
+   x^{(c)}_i - x^{(1)}_i = \frac{1}{M_{ii}} \left[ (c-1)\eta_i - \sum_{j=1}^{i-1} M_{ij} \left( x^{(c)}_j - x^{(1)}_j \right) \right]
+
+For OBC, the denominator technically blows up, but it should be obvious that :math:`x^{(c)}_i = 0`.
 
 Lattice with a basis
 --------------------
