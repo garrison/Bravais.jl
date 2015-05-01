@@ -353,47 +353,45 @@ TEST(HypercubicLattice, NextNearestNeighbors_PBC) (
 
 @test isbipartite(HypercubicLattice([4,4]))
 @test !isbipartite(HypercubicLattice([3,3]))
+@test isbipartite(HypercubicLattice([3,3], diagm([0,0])))
 @test !isbipartite(HypercubicLattice([4,3]))
 @test !isbipartite(HypercubicLattice([4,1])) # if two dimensions are specified, we don't consider this bipartite.
+@test !istripartite(HypercubicLattice([4,4]))
 
-#=
-TEST(HypercubicLattice, SublatticeIndex_4_3) (
-    const HypercubicLattice lattice((4, 3))
-    ASSERT_EQ(lattice.sublattice_index(0), 0)
-    ASSERT_EQ(lattice.sublattice_index(1), 1)
-    ASSERT_EQ(lattice.sublattice_index(2), 0)
-    ASSERT_EQ(lattice.sublattice_index(3), 1)
-    ASSERT_EQ(lattice.sublattice_index(4), 0)
-    ASSERT_EQ(lattice.sublattice_index(5), 1)
-    ASSERT_EQ(lattice.sublattice_index(6), 0)
-    ASSERT_EQ(lattice.sublattice_index(7), 1)
-    ASSERT_EQ(lattice.sublattice_index(8), 0)
-    ASSERT_EQ(lattice.sublattice_index(9), 1)
-    ASSERT_EQ(lattice.sublattice_index(10), 0)
-    ASSERT_EQ(lattice.sublattice_index(11), 1)
-)
+lattice = HypercubicLattice([4, 3], diagm([4,0]))
+@test sublattice_index(lattice, 1) == 0
+@test sublattice_index(lattice, 2) == 1
+@test sublattice_index(lattice, 3) == 0
+@test sublattice_index(lattice, 4) == 1
+@test sublattice_index(lattice, 5) == 0
+@test sublattice_index(lattice, 6) == 1
+@test sublattice_index(lattice, 7) == 0
+@test sublattice_index(lattice, 8) == 1
+@test sublattice_index(lattice, 9) == 0
+@test sublattice_index(lattice, 10) == 1
+@test sublattice_index(lattice, 11) == 0
+@test sublattice_index(lattice, 12) == 1
 
-TEST(HypercubicLattice, SublatticeIndex_4_2) (
-    const HypercubicLattice lattice((4, 2))
-    ASSERT_EQ(lattice.sublattice_index(0), 0)
-    ASSERT_EQ(lattice.sublattice_index(1), 1)
-    ASSERT_EQ(lattice.sublattice_index(2), 1)
-    ASSERT_EQ(lattice.sublattice_index(3), 0)
-    ASSERT_EQ(lattice.sublattice_index(4), 0)
-    ASSERT_EQ(lattice.sublattice_index(5), 1)
-    ASSERT_EQ(lattice.sublattice_index(6), 1)
-    ASSERT_EQ(lattice.sublattice_index(7), 0)
-)
+lattice = HypercubicLattice([4, 3])
+@test_throws AssertionError sublattice_index(lattice, 1)
 
-TEST(HypercubicLattice, SublatticeIndex_8_1) (
-    const HypercubicLattice lattice((8, 1))
-    ASSERT_EQ(lattice.sublattice_index(0), 0)
-    ASSERT_EQ(lattice.sublattice_index(1), 1)
-    ASSERT_EQ(lattice.sublattice_index(2), 0)
-    ASSERT_EQ(lattice.sublattice_index(3), 1)
-    ASSERT_EQ(lattice.sublattice_index(4), 0)
-    ASSERT_EQ(lattice.sublattice_index(5), 1)
-    ASSERT_EQ(lattice.sublattice_index(6), 0)
-    ASSERT_EQ(lattice.sublattice_index(7), 1)
-)
-=#
+lattice = HypercubicLattice([4, 2])
+@test sublattice_index(lattice, 1) == 0
+@test sublattice_index(lattice, 2) == 1
+@test sublattice_index(lattice, 3) == 1
+@test sublattice_index(lattice, 4) == 0
+@test sublattice_index(lattice, 5) == 0
+@test sublattice_index(lattice, 6) == 1
+@test sublattice_index(lattice, 7) == 1
+@test sublattice_index(lattice, 8) == 0
+
+lattice = HypercubicLattice([6])
+@test sublattice_index(lattice, 1) == 0
+@test sublattice_index(lattice, 2) == 1
+@test sublattice_index(lattice, 3) == 0
+@test sublattice_index(lattice, 4) == 1
+@test sublattice_index(lattice, 5) == 0
+@test sublattice_index(lattice, 6) == 1
+
+lattice = HypercubicLattice([6,1])
+@test_throws AssertionError sublattice_index(lattice, 1)

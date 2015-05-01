@@ -505,7 +505,7 @@ end
 isbipartite(::TriangularLattice) = false # although "technically" it might be if it's just a chain
 istripartite(lattice::TriangularLattice) = lattice.tripartite
 
-function sublattice_index(lattice::HypercubicLattice, site::Vector{Int})
+function sublattice_index(lattice::TriangularLattice, site::Vector{Int})
     @assert istripartite(lattice)
     return _triangular_sublattice_index(site)
 end
