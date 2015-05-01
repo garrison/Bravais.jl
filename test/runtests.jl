@@ -3,6 +3,8 @@ using Base.Test
 
 using Compat
 
+debug = false
+
 lattice = BravaisLattice([4,6,8])
 @test length(lattice) == 4*6*8
 @test size(lattice) == (4*6*8,)
@@ -27,47 +29,52 @@ lattice = TriangularLattice([4,6])
 @test_throws BoundsError checkbounds(HypercubicLattice([4,6]), 4*6+1)
 
 lattices = Any[
-    # Basic BravaisLattice
+    "Basic BravaisLattice",
     BravaisLattice([4,6]),
 
-    # 1D and effectively 1D
+    "1D and effectively 1D",
     HypercubicLattice([8]),
     HypercubicLattice([1, 1, 8]),
     HypercubicLattice([1, 8, 1]),
 
-    # 1D Twisted
+    "1D Twisted",
     HypercubicLattice([6], diagm([6]), [0//1]),
     HypercubicLattice([6], diagm([6]), [1//2]),
     HypercubicLattice([6], diagm([6]), [1//5]),
 
-    # 2D
+    "2D",
     HypercubicLattice([4,6]),
     HypercubicLattice([6,4]),
 
-    # 2D twisted
+    "2D twisted",
     HypercubicLattice([4,6], diagm([4,6]), [1//7, 3//13]),
     HypercubicLattice([6,4], diagm([6,4]), [1//7, 3//13]),
 
-    # 2D twisted cylinder
+    "2D twisted cylinder",
     HypercubicLattice([6,4], diagm([6,0]), [1//7, 0//1]),
 
-    # 2D twisted helix
+    "2D twisted helix",
     HypercubicLattice([6,4], [6 0; 1 4], [1//7, 3//13]),
 
-    # 3D like
+    "3D like",
     HypercubicLattice([4,2,6]),
     HypercubicLattice([4,2,6,1]),
 
-    # 3D open twisted helix
+    "3D open twisted helix",
     HypercubicLattice([4,6,8], [4 0 0; 0 6 0; 1 0 8], [1//7, 0//1, 3//13]),
 
-    # Other lattices
+    "Other lattices",
     TriangularLattice([4,6]),
     HoneycombLattice([3,5]),
     KagomeLattice([8,6]),
 ]
 
 for lattice in lattices
+    if isa(lattice, AbstractString)
+        debug && println(lattice)
+        continue
+    end
+
     len = length(lattice)
     @test size(lattice) == (len,)
 
