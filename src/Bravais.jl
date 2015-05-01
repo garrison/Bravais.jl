@@ -24,6 +24,7 @@
 
 module Bravais
 
+using Compat
 VERSION < v"0.4-" && using Docile
 
 # This macro was originally written by JMW for DataStructures.jl.
