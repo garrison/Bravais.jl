@@ -395,3 +395,17 @@ lattice = HypercubicLattice([6])
 
 lattice = HypercubicLattice([6,1])
 @test_throws AssertionError sublattice_index(lattice, 1)
+
+function test_neighbor_distances(lattice, neigh, expected=1.0)
+    expected_squared = expected ^ 2
+    neighbors(lattice, neigh) do i, j, wrap
+        diff = realspace(lattice, i) - realspace(lattice, j)
+        dist_squared = dot(diff, diff)
+        @test_approx_eq_eps expected_squared dist_squared 1e-8
+    end
+end
+
+test_neighbor_distances(HypercubicLattice([4,6], diagm([0,0])), :nearest)
+test_neighbor_distances(TriangularLattice([4,6], diagm([0,0])), :nearest)
+test_neighbor_distances(HoneycombLattice([4,6], diagm([0,0])), :nearest)
+test_neighbor_distances(KagomeLattice([4,6], diagm([0,0])), :nearest)
