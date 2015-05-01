@@ -351,6 +351,16 @@ TEST(HypercubicLattice, NextNearestNeighbors_PBC) (
 )
 =#
 
+function test_neighbor_sublattices(lattice, neigh, allowed)
+    neighbors(lattice, neigh) do i, j, wrap
+        ind1 = sublattice_index(lattice, i)
+        ind2 = sublattice_index(lattice, j)
+        @test ind1 in allowed
+        @test ind2 in allowed
+        @test ind1 != ind2
+    end
+end
+
 @test isbipartite(HypercubicLattice([4,4]))
 @test !isbipartite(HypercubicLattice([3,3]))
 @test isbipartite(HypercubicLattice([3,3], diagm([0,0])))
@@ -359,6 +369,7 @@ TEST(HypercubicLattice, NextNearestNeighbors_PBC) (
 @test !istripartite(HypercubicLattice([4,4]))
 
 lattice = HypercubicLattice([4, 3], diagm([4,0]))
+test_neighbor_sublattices(lattice, :nearest, [0,1])
 @test sublattice_index(lattice, 1) == 0
 @test sublattice_index(lattice, 2) == 1
 @test sublattice_index(lattice, 3) == 0
@@ -376,6 +387,7 @@ lattice = HypercubicLattice([4, 3])
 @test_throws AssertionError sublattice_index(lattice, 1)
 
 lattice = HypercubicLattice([4, 2])
+test_neighbor_sublattices(lattice, :nearest, [0,1])
 @test sublattice_index(lattice, 1) == 0
 @test sublattice_index(lattice, 2) == 1
 @test sublattice_index(lattice, 3) == 1
@@ -386,6 +398,7 @@ lattice = HypercubicLattice([4, 2])
 @test sublattice_index(lattice, 8) == 0
 
 lattice = HypercubicLattice([6])
+test_neighbor_sublattices(lattice, :nearest, [0,1])
 @test sublattice_index(lattice, 1) == 0
 @test sublattice_index(lattice, 2) == 1
 @test sublattice_index(lattice, 3) == 0
@@ -395,6 +408,39 @@ lattice = HypercubicLattice([6])
 
 lattice = HypercubicLattice([6,1])
 @test_throws AssertionError sublattice_index(lattice, 1)
+
+lattice = TriangularLattice([3,3])
+@test !isbipartite(lattice)
+@test istripartite(lattice)
+lattice = TriangularLattice([4,3])
+@test !isbipartite(lattice)
+@test !istripartite(lattice)
+lattice = TriangularLattice([4,3], diagm([0,3]))
+@test !isbipartite(lattice)
+@test istripartite(lattice)
+lattice = TriangularLattice([4,3], diagm([0,0]))
+@test !isbipartite(lattice)
+@test istripartite(lattice)
+
+lattice = TriangularLattice([3,3])
+test_neighbor_sublattices(lattice, :nearest, [0,1,2])
+@test sublattice_index(lattice, 1) == 0
+@test sublattice_index(lattice, 2) == 1
+@test sublattice_index(lattice, 3) == 2
+@test sublattice_index(lattice, 4) == 2
+@test sublattice_index(lattice, 5) == 0
+@test sublattice_index(lattice, 6) == 1
+@test sublattice_index(lattice, 7) == 1
+@test sublattice_index(lattice, 8) == 2
+@test sublattice_index(lattice, 9) == 0
+
+lattice = HoneycombLattice([5,5])
+@test isbipartite(lattice)
+@test !istripartite(lattice)
+test_neighbor_sublattices(lattice, :nearest, [0,1])
+for (i, site) in enumerate(lattice)
+    @test sublattice_index(lattice, i) == sublattice_index(lattice, site) == site[end] == ((i $ 1) & 1)
+end
 
 function test_neighbor_distances(lattice, neigh, expected=1.0)
     expected_squared = expected ^ 2
