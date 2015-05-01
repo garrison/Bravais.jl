@@ -100,6 +100,8 @@ for lattice in lattices
 
     @test ishelical(lattice) == !isdiag(repeater(lattice))
 
+    @test isbravais(lattice) == (lattice === bravais(lattice))
+
     if !isbravais(lattice)
         # FIXME!!
         continue
@@ -121,6 +123,10 @@ for lattice in lattices
                 end
             end
         end
+    end
+
+    for k_idx in 1:n_k_idx
+        momentumspace(lattice, k_idx)
     end
 
     # Check that translating multiple times, in total by an $\mathbf(A)_i$
@@ -157,6 +163,20 @@ for lattice in lattices
     end
 
 end
+
+lattice = KagomeLattice([2,3])
+wraparound(lattice, [4,0,0])
+# invalid basis index
+@test_throws ArgumentError wraparound(lattice, [4,0,3])
+# attempt to "translate" in direction of the basis index
+@test_throws ArgumentError translateη(lattice, 1, 3)
+
+# Invalid wraparound for OBC
+lattice = HypercubicLattice([8], diagm([0]))
+wraparound(lattice, [0])
+wraparound(lattice, [7])
+@test_throws ArgumentError wraparound(lattice, [19])
+@test_throws ArgumentError wraparound(lattice, [-1])
 
 function test_nearest_neighbors(lattice, pairs)
     mypairs = Set(pairs)
