@@ -143,7 +143,6 @@ for lattice in lattices
     end
 
     if !isbravais(lattice)
-        # FIXME!!
         continue
     end
 
@@ -167,14 +166,17 @@ for lattice in lattices
                         exp3 = exp(im * (kdotr(lattice, k_total, idx) + 2π * η_wrap * charge))
                         @test_approx_eq exp1 exp2
                         @test_approx_eq exp1 exp3
-                     end
+                    end
+                    k = momentumspace(lattice, k_idx)
+                    exp1 = exp(im * (dot(k, realspace(lattice, site)) + 2π * η[i]))
+                    exp2 = exp(im * dot(k, realspace(lattice, site2)))
+                    site3, wrap = wraparound_site(lattice, site2)
+                    exp3 = exp(im * (dot(k, realspace(lattice, site3)) + 2π * dot(wrap, twist(lattice))))
+                    @test_approx_eq exp1 exp2
+                    @test_approx_eq exp1 exp3
                 end
             end
         end
-    end
-
-    for k_idx in 1:n_k_idx
-        momentumspace(lattice, k_idx)
     end
 end
 
