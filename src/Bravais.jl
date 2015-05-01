@@ -212,9 +212,11 @@ function Base.next(lattice::AbstractLattice, site::Vector{Int})
     return site, newsite
 end
 
-# FIXME: can we return readonly array views/proxies of some of the following things?
+# FIXME: can we return readonly array views/proxies of some of the
+# following things?  It seems to be difficult if not impossible at the
+# moment -- even base library functions like eigfact return mutable
+# arrays.
 
-# FIXME: define (some of) these for LatticeWithBasis.
 dimensions(lattice::BravaisLattice) = lattice.N  # FIXME: rename this `extent`?
 
 ndimensions(lattice::BravaisLattice) = length(lattice.N)
@@ -225,9 +227,10 @@ twist(lattice::BravaisLattice) = lattice.η
 twist(lattice::LatticeWithBasis) = bravais(lattice).η
 twist(lattice::WrappedLatticeUnion) = twist(lattice.lattice)
 repeater(lattice::BravaisLattice) = lattice.M
-repeater(lattice::WrappedBravaisLattice) = repeater(lattice.lattice)
+repeater(lattice::LatticeWithBasis) = bravais(lattice).M
+repeater(lattice::WrappedLatticeUnion) = repeater(lattice.lattice)
 
-ishelical(lattice::BravaisLattice) = !isdiag(lattice.M)
+ishelical(lattice::AbstractLattice) = !isdiag(repeater(lattice))
 
 # We intentionally define many of the following functions for Bravais
 # lattices only.  If one wants to query them for a lattice with a
@@ -566,6 +569,6 @@ end
 
 #= End specific lattice w/ basis implementations =#
 
-export AbstractLattice, BravaisLattice, HypercubicLattice, TriangularLattice, LatticeWithBasis, HoneycombLattice, KagomeLattice, bravais, isbravais, maxcoords, ndimensions, dimensions, twist, repeater, nmomenta, momentum, kdotr, realspace, wraparound_site!, wraparound_site, wraparound, wraparoundη, translate_site!, translate_site, translate, translateη, momentumspace, siteneighbors, neighbors, isbipartite
+export AbstractLattice, BravaisLattice, HypercubicLattice, TriangularLattice, LatticeWithBasis, HoneycombLattice, KagomeLattice, bravais, isbravais, maxcoords, ndimensions, dimensions, twist, repeater, ishelical, nmomenta, momentum, kdotr, realspace, wraparound_site!, wraparound_site, wraparound, wraparoundη, translate_site!, translate_site, translate, translateη, momentumspace, siteneighbors, neighbors, isbipartite
 
 end # module

@@ -94,6 +94,12 @@ for lattice in lattices
     end
     @test last == true
 
+    d = ndimensions(lattice)
+    η = twist(lattice)
+    M = repeater(lattice)
+
+    @test ishelical(lattice) == !isdiag(repeater(lattice))
+
     if !isbravais(lattice)
         # FIXME!!
         continue
@@ -101,9 +107,6 @@ for lattice in lattices
 
     # Check the momenta across the boundary conditions
     n_k_idx = nmomenta(lattice)
-    d = ndimensions(lattice)
-    η = twist(lattice)
-    M = repeater(lattice)
     for site in lattice
         for k_idx in 1:n_k_idx
             for i in 1:d
