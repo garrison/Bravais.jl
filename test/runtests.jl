@@ -349,7 +349,14 @@ TEST(HypercubicLattice, NextNearestNeighbors_PBC) (
     )
     test_next_nearest_neighbors(HypercubicLattice((6)), pairs)
 )
+=#
 
+@test isbipartite(HypercubicLattice([4,4]))
+@test !isbipartite(HypercubicLattice([3,3]))
+@test !isbipartite(HypercubicLattice([4,3]))
+@test !isbipartite(HypercubicLattice([4,1])) # if two dimensions are specified, we don't consider this bipartite.
+
+#=
 TEST(HypercubicLattice, SublatticeIndex_4_3) (
     const HypercubicLattice lattice((4, 3))
     ASSERT_EQ(lattice.sublattice_index(0), 0)

@@ -46,6 +46,10 @@ end
 # Julia currently lacks row-major versions of sub2ind and ind2sub.  We
 # want to use these so the ordering for returned tuples is correct;
 # see discussion at <https://github.com/JuliaLang/julia/pull/10337#issuecomment-78206799>.
+#
+# Also, once julia easily supports it we can speed up ind2sub by
+# precomputing some "magic numbers" for given lattice dimensions (see
+# https://github.com/JuliaLang/julia/issues/8188#issuecomment-56763806).
 rowmajor_ind2sub(dims, index) = reverse(ind2sub(reverse(dims), index))
 
 abstract AbstractSiteNetwork <: AbstractVector{Vector{Int}}
@@ -246,6 +250,8 @@ recivecs(lattice::BravaisLattice) = lattice.b
 nmomenta(lattice::BravaisLattice) = size(lattice.momenta, 2)
 nmomenta(lattice::WrappedBravaisLattice) = nmomenta(lattice.lattice)
 
+# FIXME: need a way to iterate momenta
+
 momentum(lattice::BravaisLattice, idx) = lattice.momenta[:, idx]
 function momentum(lattice::BravaisLattice, idx, charge::Int)
     # "total momentum", really.  note that this may return things greater than one.
@@ -381,14 +387,50 @@ end
 
 #= Begin specific Bravais lattice implementations =#
 
+sublattice_index(lattice::AbstractLattice, ridx::Int) = sublattice_index(lattice, lattice[ridx])
+
+function _hypercubic_sublattice_index(site::Vector{Int})
+    parity = 0
+    for x in site
+        parity $= x
+    end
+    return parity & 1
+end
+
 immutable HypercubicLattice <: WrappedBravaisLattice
     lattice::BravaisLattice
+    bipartite::Bool
 
     function HypercubicLattice(N::Vector{Int},
                                M::Matrix{Int}=diagm(N), # assumes pbc
                                η::Vector{Rational{Int}}=zeros(Rational{Int}, length(N)))
-        new(BravaisLattice(N, M, η))
+        bravaislattice = BravaisLattice(N, M, η)
+        d = length(N)
+        bipartite = true
+        for i in 1:d
+            if M[i,i] != 0
+                # Attempt to go across the boundary in the `i`
+                # direction, and test if the site is on the same
+                # sublattice after being wrapped around.
+                site1 = zeros(Int, d)
+                site1[i] = N[i]
+                site2, = wraparound_site(bravaislattice, site1)
+                if _hypercubic_sublattice_index(site1) != _hypercubic_sublattice_index(site2)
+                    bipartite = false
+                    break
+                end
+            end
+        end
+        new(bravaislattice, bipartite)
     end
+end
+
+isbipartite(lattice::HypercubicLattice) = lattice.bipartite
+istripartite(::HypercubicLattice) = false
+
+function sublattice_index(lattice::HypercubicLattice, site::Vector{Int})
+    @assert isbipartite(lattice)
+    return _hypercubic_sublattice_index(site)
 end
 
 # FIXME: do the wrapping etc in a common function for all lattice
@@ -426,20 +468,49 @@ function siteneighbors(f, lattice::HypercubicLattice, ridx::Integer, neigh=:near
     end
 end
 
+function _triangular_sublattice_index(site::Vector{Int})
+    @assert length(site) == 2
+    # FIXME: mod is slow
+    return mod(site[2] - site[1], 3)
+end
+
 immutable TriangularLattice <: WrappedBravaisLattice
     lattice::BravaisLattice
+    tripartite::Bool
 
     function TriangularLattice(N::Vector{Int},
                                M::Matrix{Int}=diagm(N), # assumes pbc
                                η::Vector{Rational{Int}}=zeros(Rational{Int}, length(N)))
         @assert length(N) == 2
-        new(BravaisLattice(N, M, η, [1.0 0; 0.5 sqrt(3)/2]'))
+        bravaislattice = BravaisLattice(N, M, η, [1.0 0; 0.5 sqrt(3)/2]')
+        tripartite = true
+        for i in 1:2
+            if M[i,i] != 0
+                # Attempt to go across the boundary in the `i`
+                # direction, and test if the site is on the same
+                # sublattice after being wrapped around.
+                site1 = [0, 0]
+                site1[i] = N[i]
+                site2, = wraparound_site(bravaislattice, site1)
+                if _triangular_sublattice_index(site1) != _triangular_sublattice_index(site2)
+                    tripartite = false
+                    break
+                end
+            end
+        end
+        new(bravaislattice, tripartite)
     end
 end
 
-isbipartite(lattice::TriangularLattice) = false # although technically it might be if it's just a chain
+isbipartite(::TriangularLattice) = false # although "technically" it might be if it's just a chain
+istripartite(lattice::TriangularLattice) = lattice.tripartite
 
-# FIXME: many of these neighbor functions can use special handling when the lattice height or width is 1 in a direction.
+function sublattice_index(lattice::HypercubicLattice, site::Vector{Int})
+    @assert istripartite(lattice)
+    return _triangular_sublattice_index(site)
+end
+
+# FIXME: many of these neighbor functions can use special handling when the lattice height or width is 1 in a direction.  or we could just forbid this.
 
 function siteneighbors(f, lattice::TriangularLattice, ridx::Integer, neigh=:nearest) # FIXME: ; double_count=false)
     M = lattice.lattice.M
@@ -487,6 +558,15 @@ immutable HoneycombLattice <: WrappedLatticeWithBasis
     end
 end
 
+isbipartite(::HoneycombLattice) = true
+istripartite(::HoneycombLattice) = false
+
+function sublattice_index(::HoneycombLattice, site::Vector{Int})
+    retval = site[end]
+    @assert retval in (0,1)
+    return retval
+end
+
 function siteneighbors(f, lattice::HoneycombLattice, ridx::Integer, neigh=:nearest; double_count=false)
     M = bravais(lattice).M
     mc = maxcoords(lattice)
@@ -532,6 +612,15 @@ immutable KagomeLattice <: WrappedLatticeWithBasis
     end
 end
 
+isbipartite(::KagomeLattice) = false
+istripartite(::KagomeLattice) = true
+
+function sublattice_index(::KagomeLattice, site::Vector{Int})
+    retval = site[end]
+    @assert retval in (0,1,2)
+    return retval
+end
+
 function siteneighbors(f, lattice::KagomeLattice, ridx::Integer, neigh=:nearest) #; double_count=false)
     M = bravais(lattice).M
     mc = maxcoords(lattice)
@@ -570,6 +659,6 @@ end
 
 #= End specific lattice w/ basis implementations =#
 
-export AbstractLattice, BravaisLattice, HypercubicLattice, TriangularLattice, LatticeWithBasis, HoneycombLattice, KagomeLattice, bravais, isbravais, maxcoords, ndimensions, dimensions, twist, repeater, ishelical, nmomenta, momentum, kdotr, realspace, wraparound_site!, wraparound_site, wraparound, wraparoundη, translate_site!, translate_site, translate, translateη, momentumspace, siteneighbors, neighbors, isbipartite
+export AbstractLattice, BravaisLattice, HypercubicLattice, TriangularLattice, LatticeWithBasis, HoneycombLattice, KagomeLattice, bravais, isbravais, maxcoords, ndimensions, dimensions, twist, repeater, ishelical, nmomenta, momentum, kdotr, realspace, wraparound_site!, wraparound_site, wraparound, wraparoundη, translate_site!, translate_site, translate, translateη, momentumspace, siteneighbors, neighbors, isbipartite, istripartite, sublattice_index
 
 end # module
