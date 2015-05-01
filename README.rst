@@ -8,7 +8,7 @@ Bravais
 .. image:: https://coveralls.io/repos/garrison/Bravais.jl/badge.svg
     :target: https://coveralls.io/r/garrison/Bravais.jl
 
-A package for working with lattices in `condensed matter physics <http://en.wikipedia.org/wiki/Condensed_matter_physics>`_.
+A `Julia <http://julialang.org/>`_ package for working with lattices in `condensed matter physics <http://en.wikipedia.org/wiki/Condensed_matter_physics>`_.
 
 .. NOTE:: This package is a work in progress.
 

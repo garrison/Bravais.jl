@@ -13,8 +13,6 @@
 
 # FIXME: need other constructors for e.g. OBC
 
-# TODO: neighbors(f, lattice, :first)
-
 # FIXME: have a way of getting the neighbors of a given site (instead
 # of iterating through all of them).  for this, we may actually want
 # to double count (or not).
@@ -313,7 +311,6 @@ function wraparound_site!(lattice::LatticeImplUnion, site::Vector{Int})
 
     for i in d:-1:1
         if !(0 <= site[i] < N[i])
-            # XXX: be sure to double-check all this logic
             if M[i,i] != 0
                 # periodic/twisted BC's in this direction
                 wrap[i] = fld(site[i], N[i])

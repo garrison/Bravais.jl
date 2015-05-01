@@ -120,7 +120,7 @@ Lattice with a basis
 Generic lattice code
 --------------------
 
-OK, so what do we need to determine a lattice?  :math:`\mathbf{a}_i`, :math:`\mathbf{b}_i`, :math:`N_i`, :math:`\eta_i`, and the lower triangular matrix :math:`M_{ij}`.  Note for the diagonal elements that :math:`M_{ii} = N_i` (for periodic or twisted boundary conditions) or :math:`M_{ii} = 0` (for open boundary conditions).  For simplicity we assume that :math:`0 \le \eta_i < 1\ \forall i`.  We rely on the user implementing the lattice type to specify the concept of "nearest neighbors", as what is meant by the :math:`n`'th nearest neighbors depends on the details of the lattice spacing in each direction.
+OK, so what do we need to determine a lattice?  :math:`\mathbf{a}_i`, :math:`\mathbf{b}_i`, :math:`N_i`, :math:`\eta_i`, and the lower triangular matrix :math:`M_{ij}`.  Note for the diagonal elements that :math:`M_{ii} = N_i` (for periodic or twisted boundary conditions) or :math:`M_{ii} = 0` (for open boundary conditions).  For simplicity we assume that :math:`0 \le \eta_i < 1\ \forall i`.  We rely on the user implementing the lattice type to specify the concept of "nearest neighbors", as what is meant by the :math:`n`\ th nearest neighbors depends on the details of the lattice spacing in each direction.
 
 Here's a table for our variables and what symbols are used in the code
 
