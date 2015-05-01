@@ -109,6 +109,39 @@ for lattice in lattices
 
     @test isbravais(lattice) == (lattice === bravais(lattice))
 
+    # Check that translating multiple times, in total by an $\mathbf(A)_i$
+    # vector, brings us back to where we started (and picking up a phase due
+    # to $η_i$).
+    sz = length(lattice)
+    for i in 1:d
+        if M[i,i] == 0
+            continue
+        end
+
+        # Initialize our array of each index, along with a beginning
+        # phase of zero
+        indices = @compat Tuple{Int, Rational{Int}}[(z, 0//1) for z in 1:sz]
+
+        # Translate as many times as we need to in each dimension
+        for j in 1:d
+            for z in 1:M[i,j]
+                new_indices = @compat Tuple{Int, Rational{Int}}[]
+                sizehint!(new_indices, sz)
+                for (s, old_η) in indices
+                    newidx, wrap_η = translateη(lattice, s, j)
+                    push!(new_indices, (newidx, wrap_η + old_η))
+                end
+                indices = new_indices
+            end
+        end
+
+        # assert that everything is as expected (i.e., overall we got the
+        # identity element while picking up some phase)
+        for z in 1:sz
+            @test indices[z] == (z, η[i])
+        end
+    end
+
     if !isbravais(lattice)
         # FIXME!!
         continue
@@ -143,40 +176,6 @@ for lattice in lattices
     for k_idx in 1:n_k_idx
         momentumspace(lattice, k_idx)
     end
-
-    # Check that translating multiple times, in total by an $\mathbf(A)_i$
-    # vector, brings us back to where we started (and picking up a phase due
-    # to $η_i$).
-    sz = length(lattice)
-    for i in 1:d
-        if M[i,i] == 0
-            continue
-        end
-
-        # Initialize our array of each index, along with a beginning
-        # phase of zero
-        indices = @compat Tuple{Int, Rational{Int}}[(z, 0//1) for z in 1:sz]
-
-        # Translate as many times as we need to in each dimension
-        for j in 1:d
-            for z in 1:M[i,j]
-                new_indices = @compat Tuple{Int, Rational{Int}}[]
-                sizehint!(new_indices, sz)
-                for (s, old_η) in indices
-                    newidx, wrap_η = translateη(lattice, s, j)
-                    push!(new_indices, (newidx, wrap_η + old_η))
-                end
-                indices = new_indices
-            end
-        end
-
-        # assert that everything is as expected (i.e., overall we got the
-        # identity element while picking up some phase)
-        for z in 1:sz
-            @test indices[z] == (z, η[i])
-        end
-    end
-
 end
 
 lattice = KagomeLattice([2,3])
