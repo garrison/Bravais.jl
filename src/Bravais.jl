@@ -455,6 +455,10 @@ function sublattice_index(lattice::HypercubicLattice, site::Vector{Int})
     return _hypercubic_sublattice_index(site)
 end
 
+typealias ChainLattice HypercubicLattice{1}
+typealias SquareLattice HypercubicLattice{2}
+typealias CubicLattice HypercubicLattice{3}
+
 # FIXME: do the wrapping etc in a common function for all lattice
 # types.  then the siteneighbors function (or `siteneighbordsimpl`)
 # can be specified even more simply.
@@ -467,6 +471,34 @@ end
 # XXX FIXME: we want to be able (in the end) to choose different
 # primitive vectors so we can have a weird helical lattice.  how are
 # we going to support this??
+
+function siteneighbors(f, lattice::ChainLattice, ridx::Integer, ::Type{Val{1}}) # FIXME: ; double_count=false)
+    M = lattice.lattice.M
+    mc = maxcoords(lattice)
+    site = lattice[ridx]
+    newsite = [site[1] + 1]
+    if M[1,1] <= 1 && newsite[1] >= mc[1]
+        # Do not provide neighbors across an open boundary.
+        return
+    end
+    newidx, wrap = wraparound(lattice, newsite)
+    f(ridx, newidx, wrap)
+    nothing
+end
+
+function siteneighbors{N}(f, lattice::ChainLattice, ridx::Integer, ::Type{Val{N}}) # FIXME: ; double_count=false)
+    M = lattice.lattice.M
+    mc = maxcoords(lattice)
+    site = lattice[ridx]
+    newsite = [site[1] + N]
+    if M[1,1] <= 1 && newsite[1] >= mc[1]
+        # Do not provide neighbors across an open boundary.
+        return
+    end
+    newidx, wrap = wraparound(lattice, newsite)
+    f(ridx, newidx, wrap)
+    nothing
+end
 
 function siteneighbors{D}(f, lattice::HypercubicLattice{D}, ridx::Integer, ::Type{Val{1}}) # FIXME: ; double_count=false)
     M = lattice.lattice.M
@@ -485,10 +517,6 @@ function siteneighbors{D}(f, lattice::HypercubicLattice{D}, ridx::Integer, ::Typ
         f(ridx, newidx, wrap)
     end
 end
-
-typealias ChainLattice HypercubicLattice{1}
-typealias SquareLattice HypercubicLattice{2}
-typealias CubicLattice HypercubicLattice{3}
 
 function siteneighbors(f, lattice::SquareLattice, ridx::Integer, ::Type{Val{2}}) # FIXME: ; double_count=false)
     offsets = ([1,1], [-1,1])

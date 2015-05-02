@@ -475,6 +475,10 @@ function test_neighbor_distances(lattice, neigh=Val{1}, expected_squared=1)
     end
 end
 
+test_neighbor_distances(ChainLattice([8], diagm([0])))
+test_neighbor_distances(ChainLattice([8], diagm([0])), Val{1}, 1)
+test_neighbor_distances(ChainLattice([8], diagm([0])), Val{2}, 4)
+test_neighbor_distances(ChainLattice([8], diagm([0])), Val{5}, 25)
 test_neighbor_distances(SquareLattice([4,6], diagm([0,0])))
 test_neighbor_distances(SquareLattice([4,6], diagm([0,0])), Val{2}, 2)
 test_neighbor_distances(TriangularLattice([4,6], diagm([0,0])))
