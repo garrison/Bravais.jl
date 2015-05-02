@@ -6,21 +6,21 @@ Details
 The direct Bravais lattice
 --------------------------
 
-A Bravais lattice in :math:`d` dimensions is defined, given some "primitive vectors" :math:`\mathbf{a}_i`, to be all points :math:`\mathbf{R} = \sum_{i=1}^d n_i \mathbf{a}_i` where each :math:`n_i \in \mathbb{Z}`.  (There is one primitive vector for each dimension in which the lattice extends.)
+A Bravais lattice in :math:`D` dimensions is defined, given some "primitive vectors" :math:`\mathbf{a}_i`, to be all points :math:`\mathbf{R} = \sum_{i=1}^D n_i \mathbf{a}_i` where each :math:`n_i \in \mathbb{Z}`.  (There is one primitive vector for each dimension in which the lattice extends.)
 
 We cannot address (or store information about) an infinite number of points on a computer, so instead we choose a finite number of contiguous points from our infinite lattice, and label them as the points we will consider.  If we wish to emulate a system without boundary and maintain the translation symmetry of the lattice, we will implement "periodic boundary conditions" (PBC, also known as Born-von Karman boundary conditions) in all directions.  Another option is to implement fully open boundary conditions (OBC), in which case the lattice is simply truncated beyond the points of the finite lattice.  Yet another option is to have OBC in some dimensions and PBC in others; one example of this is cylindrical boundary conditions in a 2D system.
 
 .. todo::
    Diagrams of the above cases may be quite useful here.
 
-Let's get a bit more mathmatical.  Given positive integers :math:`N_1, \ldots, N_d` along with the primitive vectors :math:`\mathbf{a}_i`, we define a finite lattice with :math:`N_\mathrm{tot}=\prod_{i=1}^d N_i` sites, each site given by :math:`\mathbf{r}_\alpha = \sum_{i=1}^d n_i \mathbf{a}_i` where :math:`n_i \in \mathbb{Z}_{N_i}` and :math:`\alpha = 1, \ldots, N_\mathrm{tot}`.  (We will refer to :math:`\alpha` as the "index" of the site, and :math:`(n_1, \ldots, n_d)` as the "site label.")
+Let's get a bit more mathmatical.  Given positive integers :math:`N_1, \ldots, N_D` along with the primitive vectors :math:`\mathbf{a}_i`, we define a finite lattice with :math:`N_\mathrm{tot}=\prod_{i=1}^D N_i` sites, each site given by :math:`\mathbf{r}_\alpha = \sum_{i=1}^D n_i \mathbf{a}_i` where :math:`n_i \in \mathbb{Z}_{N_i}` and :math:`\alpha = 1, \ldots, N_\mathrm{tot}`.  (We will refer to :math:`\alpha` as the "index" of the site, and :math:`(n_1, \ldots, n_D)` as the "site label.")
 
 At this point, the finite lattice only represents a subset of the original lattice sites.  For the case of periodic boundary conditions, we would like to repeat our "finite" lattice, tiling it throughout the lattice such that every site of our original infinite lattice is represented by some site on our finite lattice.
 
 .. todo::
    (A diagram may help explain.)
 
-We define vectors :math:`\mathbf{A}_1, \ldots, \mathbf{A}_d`, each of which is some linear combination of the primitive vectors, such that each site on the infinite lattice can be written *uniquely* as :math:`\mathbf{R} = \mathbf{r}_\alpha + \sum_{i=1}^d \tilde{N}_i \mathbf{A}_i`, where :math:`\tilde{N}_i \in \mathbb{Z}`.  There will often (particularly for :math:`d>1`) be infinitely many different ways of choosing these vectors, some of which will result in "helical" boundary conditions (in which translating the length of the lattice in one dimension also results in an offset in one or more other dimensions).
+We define vectors :math:`\mathbf{A}_1, \ldots, \mathbf{A}_D`, each of which is some linear combination of the primitive vectors, such that each site on the infinite lattice can be written *uniquely* as :math:`\mathbf{R} = \mathbf{r}_\alpha + \sum_{i=1}^D \tilde{N}_i \mathbf{A}_i`, where :math:`\tilde{N}_i \in \mathbb{Z}`.  There will often (particularly for :math:`d>1`) be infinitely many different ways of choosing these vectors, some of which will result in "helical" boundary conditions (in which translating the length of the lattice in one dimension also results in an offset in one or more other dimensions).
 
 .. todo::
    May help to give a few examples here, and diagrams!
@@ -33,7 +33,7 @@ We define vectors :math:`\mathbf{A}_1, \ldots, \mathbf{A}_d`, each of which is s
 The reciprocal lattice
 ----------------------
 
-The reciprocal lattice of a Bravais lattice is defined as all wave vectors :math:`\mathbf{K}` satisfying :math:`e^{i\mathbf{K}\cdot\mathbf{R}}=1` for all points :math:`\mathbf{R}` in the infinite Bravais lattice.  In other words, we require :math:`\mathbf{K} \cdot \mathbf{R} = 2\pi M` for some :math:`M \in \mathbb{Z}`.  This can best be achieved by choosing the reciprocal lattice's primitive vectors :math:`\mathbf{b}_j` such that :math:`\mathbf{a}_i \cdot \mathbf{b}_j = 2\pi \delta_{ij}`.  Then each :math:`\mathbf{K}` can be written as :math:`\mathbf{K} = \sum_{j=1}^d m_j \mathbf{b}_j` with :math:`m_j \in \mathbb{Z}`.  This gives :math:`\mathbf{K} \cdot \mathbf{R} = \sum_{i=1}^d\sum_{j=1}^d n_i m_j \, \mathbf{a}_i \cdot \mathbf{b}_j = 2\pi \sum_{i=1}^d m_i n_i`, which will always satisfy the original condition :math:`e^{i\mathbf{K}\cdot\mathbf{R}}=1`.  (For more details, see e.g. Ashcroft and Mermin pages 86-87.)
+The reciprocal lattice of a Bravais lattice is defined as all wave vectors :math:`\mathbf{K}` satisfying :math:`e^{i\mathbf{K}\cdot\mathbf{R}}=1` for all points :math:`\mathbf{R}` in the infinite Bravais lattice.  In other words, we require :math:`\mathbf{K} \cdot \mathbf{R} = 2\pi M` for some :math:`M \in \mathbb{Z}`.  This can best be achieved by choosing the reciprocal lattice's primitive vectors :math:`\mathbf{b}_j` such that :math:`\mathbf{a}_i \cdot \mathbf{b}_j = 2\pi \delta_{ij}`.  Then each :math:`\mathbf{K}` can be written as :math:`\mathbf{K} = \sum_{j=1}^D m_j \mathbf{b}_j` with :math:`m_j \in \mathbb{Z}`.  This gives :math:`\mathbf{K} \cdot \mathbf{R} = \sum_{i=1}^D\sum_{j=1}^D n_i m_j \, \mathbf{a}_i \cdot \mathbf{b}_j = 2\pi \sum_{i=1}^D m_i n_i`, which will always satisfy the original condition :math:`e^{i\mathbf{K}\cdot\mathbf{R}}=1`.  (For more details, see e.g. Ashcroft and Mermin pages 86-87.)
 
 It is worth noting that the reciprocal of the reciprocal lattice is the direct lattice itself.
 
@@ -56,16 +56,16 @@ We define the "twist" values :math:`\eta_i` such that
 
 for all :math:`i`.  (For a system without any twisted boundary conditions, :math:`\eta_i=0\ \forall i`.)  We can combine our knowledge that :math:`\mathbf{A}_i` is in the lattice with Bloch's theorem to give :math:`e^{i\mathbf{k} \cdot \mathbf{A}_i}\psi(\mathbf{r}) = e^{2\pi i\eta_i}\psi(\mathbf{r})`, or equivalently :math:`e^{i\left[ \mathbf{k} \cdot \mathbf{A}_i -  2\pi\eta_i \right]} = 1`, for all :math:`i`.
 
-We know that the :math:`\mathbf{A}_i`'s must be linear combinations of the primitive vectors, so we can write them as :math:`\mathbf{A}_i = \sum_{j=1}^d M_{ij} \mathbf{a}_j`, where each :math:`M_{ij}` is an integer.  (For periodic/twisted boundary conditions, our diagonal elements must be :math:`M_{ii} = N_i`, the lattice extent in each direction.  We will see later that for any dimension :math:`i` in which we have open boundary conditions, we instead have :math:`M_{ii} = 0`.)  We will also write our wave vector in terms of fractions of the reciprocal lattice's basis vectors: :math:`\mathbf{k} = \sum_{h=1}^d x_h \mathbf{b}_h`.  Then,
+We know that the :math:`\mathbf{A}_i`'s must be linear combinations of the primitive vectors, so we can write them as :math:`\mathbf{A}_i = \sum_{j=1}^D M_{ij} \mathbf{a}_j`, where each :math:`M_{ij}` is an integer.  (For periodic/twisted boundary conditions, our diagonal elements must be :math:`M_{ii} = N_i`, the lattice extent in each direction.  We will see later that for any dimension :math:`i` in which we have open boundary conditions, we instead have :math:`M_{ii} = 0`.)  We will also write our wave vector in terms of fractions of the reciprocal lattice's basis vectors: :math:`\mathbf{k} = \sum_{h=1}^D x_h \mathbf{b}_h`.  Then,
 
 .. math::
-   \mathbf{k} \cdot \mathbf{A}_i &= \sum_{h=1}^d \sum_{j=1}^d x_h M_{ij} \mathbf{b}_h \cdot \mathbf{a}_j \\
-   &= 2\pi \sum_{j=1}^d M_{ij} x_j
+   \mathbf{k} \cdot \mathbf{A}_i &= \sum_{h=1}^D \sum_{j=1}^D x_h M_{ij} \mathbf{b}_h \cdot \mathbf{a}_j \\
+   &= 2\pi \sum_{j=1}^D M_{ij} x_j
 
 With this, our requirement becomes
 
 .. math::
-   \left[ -\eta_i + \sum_{j=1}^d M_{ij} x_j \right] = \tilde{n}_i
+   \left[ -\eta_i + \sum_{j=1}^D M_{ij} x_j \right] = \tilde{n}_i
 
 for all :math:`i`, where each :math:`\tilde{n}_i` is some nonnegative integer less than :math:`N_i`.  This can also be written as a matrix equation, :math:`Mx = \tilde{n} + \eta`.
 
@@ -129,8 +129,7 @@ Here's a table for our variables and what symbols are used in the code
 +========================+========================+=================================+==================================+
 | :math:`N_i`            | ``N[i]``               | ``dimensions(lattice)[i]``      | lattice extent in each direction |
 +------------------------+------------------------+---------------------------------+----------------------------------+
-| :math:`d`              | ``d``                  | ``length(dimensions(lattice))`` | number of dimensions             |
-|                        |                        | or ``ndimensions(lattice)``     |                                  |
+| :math:`D`              | ``D``                  | ``ndimensions(lattice)``      ` | number of dimensions             |
 +------------------------+------------------------+---------------------------------+----------------------------------+
 | :math:`N_\mathrm{tot}` | ``N_tot``              | ``length(lattice)``             | total number of sites            |
 +------------------------+------------------------+---------------------------------+----------------------------------+

@@ -75,40 +75,39 @@ immutable BravaisLattice{D} <: AbstractBravaisLattice{D}
                             a::Matrix{Float64}=eye(length(N)))
 
         # check N
-        @assert all(d_i -> d_i>0, N)
-        @assert length(N) == D
-        d = D
+        length(N) == D || throw(ArgumentError(""))
+        all(d_i -> d_i>0, N) || throw(ArgumentError(""))
         N_tot = prod(N)
 
         # check M
-        @assert size(M) == (d, d)
-        @assert istril(M)
-        for i in 1:d
-            @assert M[i,i] == 0 || M[i,i] == N[i]
+        size(M) == (D, D) || throw(ArgumentError(""))
+        istril(M) || throw(ArgumentError(""))
+        for i in 1:D
+            M[i,i] == 0 || M[i,i] == N[i] || throw(ArgumentError(""))
             if M[i,i] != N[i]
-                @assert all(s->(s == 0), M[i,:])
-                @assert all(s->(s == 0), M[:,i])
+                all(s->(s == 0), M[i,:]) || throw(ArgumentError(""))
+                all(s->(s == 0), M[:,i]) || throw(ArgumentError(""))
             end
         end
 
         # check η
-        @assert length(η) == d
-        @assert all(η_i -> 0<=η_i<1, η)
-        @assert all([M[i,i] != 0 || η[i] == 0 for i in 1:d])
+        length(η) == D || throw(ArgumentError(""))
+        all(η_i -> 0<=η_i<1, η) || throw(ArgumentError(""))
+        all([M[i,i] != 0 || η[i] == 0 for i in 1:D]) || throw(ArgumentError(""))
 
         # check a and generate b
-        @assert size(a) == (d, d)
+        size(a) == (D, D) || throw(ArgumentError(""))
         b = 2pi * transpose(inv(a))
 
         # generate allowed momenta
         momenta_range = [s != 0 ? s : 1 for s in diag(M)]
         nmomenta = prod(momenta_range)
-        momenta = Array(Rational{Int}, d, nmomenta)
+        momenta = Array(Rational{Int}, D, nmomenta)
         for idx in 1:nmomenta
             # FIXME: getting idx should be easier, once
             # multidimensional iteration is supported
             ñ = [rowmajor_ind2sub(tuple(momenta_range...), idx)...] - 1
-            for i in 1:d
+            for i in 1:D
                 if M[i,i] == 0
                     momenta[i,idx] = 0
                 else
@@ -119,9 +118,9 @@ immutable BravaisLattice{D} <: AbstractBravaisLattice{D}
         end
 
         # calculate strides
-        strides = zeros(Int, d)
+        strides = zeros(Int, D)
         s = 1
-        for i in d:-1:1
+        for i in D:-1:1
             strides[i] = s
             s *= N[i]
         end
@@ -146,8 +145,8 @@ immutable LatticeWithBasis{D} <: AbstractLatticeWithBasis{D}
 
         # check basis
         nbasis = size(basis)[2]
-        @assert nbasis > 0
-        @assert size(basis)[1] == length(N)
+        nbasis > 0 || throw(ArgumentError(""))
+        size(basis)[1] == length(N) || throw(ArgumentError(""))
 
         # determine N_tot and maxcoords, now that we know the basis size
         N_tot = prod(N) * nbasis
@@ -174,8 +173,8 @@ bravais(lattice::AbstractBravaisLattice) = lattice
 bravais(lattice::LatticeWithBasis) = lattice.bravaislattice
 bravais(lattice::WrappedLatticeWithBasis) = bravais(lattice.lattice)
 
-LatticeImplUnion = Union(BravaisLattice, LatticeWithBasis)
-WrappedLatticeUnion = Union(WrappedBravaisLattice, WrappedLatticeWithBasis)
+typealias LatticeImplUnion{D} Union(BravaisLattice{D}, LatticeWithBasis{D})
+typealias WrappedLatticeUnion{D} Union(WrappedBravaisLattice{D}, WrappedLatticeWithBasis{D})
 
 _strides(lattice::LatticeImplUnion) = lattice.strides
 _strides(lattice::WrappedLatticeUnion) = _strides(lattice.lattice)
@@ -250,15 +249,14 @@ nmomenta(lattice::WrappedBravaisLattice) = nmomenta(lattice.lattice)
 # FIXME: need a way to iterate momenta
 
 momentum(lattice::BravaisLattice, idx) = lattice.momenta[:, idx]
-function momentum(lattice::BravaisLattice, idx, charge::Int)
+function momentum{D}(lattice::BravaisLattice{D}, idx, charge::Int)
     # "total momentum", really.  note that this may return things greater than one.
     x1 = momentum(lattice, idx)
     if charge == 1
         return x1
     end
-    d = length(lattice.N)
-    offsets = zeros(Rational{Int}, d)
-    for i in 1:d
+    offsets = zeros(Rational{Int}, D)
+    for i in 1:D
         if lattice.M[i,i] != 0
             offsets[i] = lattice.η[i] * (charge - 1)
             for j in 1:i-1
@@ -284,16 +282,15 @@ realspace(lattice::BravaisLattice, site::Vector{Int}) = lattice.a * site
 realspace(lattice::BravaisLattice, site::Vector{Int}, wrap::Vector{Int}) = lattice.a * (site + transpose(lattice.M) * wrap)
 
 function realspace(lattice::LatticeWithBasis, site::Vector{Int}, args...)
-    @assert length(site) == length(lattice.maxcoords)
+    length(site) == length(lattice.maxcoords) || throw(ArgumentError(""))
     return realspace(bravais(lattice), site[1:end-1], args...) + lattice.basis[:, site[end]+1]
 end
 
 realspace(lattice::LatticeImplUnion, ridx::Integer, args...) = realspace(lattice, lattice[ridx], args...)
 
-function wraparound_site!(lattice::LatticeImplUnion, site::Vector{Int})
-    d = ndimensions(lattice)
+function wraparound_site!{D}(lattice::LatticeImplUnion{D}, site::Vector{Int})
     mc = maxcoords(lattice)
-    @assert length(site) == length(mc)
+    length(site) == length(mc) || throw(ArgumentError(""))
 
     # For lattice w/ basis, make sure the last index is in range, as
     # we cannot wrap it around.
@@ -303,12 +300,12 @@ function wraparound_site!(lattice::LatticeImplUnion, site::Vector{Int})
         end
     end
 
-    wrap = zeros(Int, d)
+    wrap = zeros(Int, D)
 
     N = bravais(lattice).N
     M = bravais(lattice).M
 
-    for i in d:-1:1
+    for i in D:-1:1
         if !(0 <= site[i] < N[i])
             if M[i,i] != 0
                 # periodic/twisted BC's in this direction
@@ -410,14 +407,13 @@ immutable HypercubicLattice{D} <: WrappedBravaisLattice{D}
                                M::Matrix{Int}=diagm(N), # assumes pbc
                                η::Vector{Rational{Int}}=zeros(Rational{Int}, length(N)))
         bravaislattice = BravaisLattice{D}(N, M, η)
-        d = length(N)
         bipartite = true
-        for i in 1:d
+        for i in 1:D
             if M[i,i] != 0
                 # Attempt to go across the boundary in the `i`
                 # direction, and test if the site is on the same
                 # sublattice after being wrapped around.
-                site1 = zeros(Int, d)
+                site1 = zeros(Int, D)
                 site1[i] = N[i]
                 site2, = wraparound_site(bravaislattice, site1)
                 if _hypercubic_sublattice_index(site1) != _hypercubic_sublattice_index(site2)
@@ -451,13 +447,13 @@ end
 # primitive vectors so we can have a weird helical lattice.  how are
 # we going to support this??
 
-function siteneighbors(f, lattice::HypercubicLattice, ridx::Integer, ::Type{Val{:nearest}}) # FIXME: ; double_count=false)
+function siteneighbors{D}(f, lattice::HypercubicLattice{D}, ridx::Integer, ::Type{Val{:nearest}}) # FIXME: ; double_count=false)
     M = lattice.lattice.M
     mc = maxcoords(lattice)
 
     site = lattice[ridx]
 
-    for i in 1:ndimensions(lattice)
+    for i in 1:D
         newsite = copy(site)
         newsite[i] += 1
         if M[i,i] <= 1 && newsite[i] >= mc[i]
@@ -486,7 +482,6 @@ immutable TriangularLattice <: WrappedBravaisLattice{2}
     function TriangularLattice(N::Vector{Int},
                                M::Matrix{Int}=diagm(N), # assumes pbc
                                η::Vector{Rational{Int}}=zeros(Rational{Int}, length(N)))
-        @assert length(N) == 2
         bravaislattice = BravaisLattice{2}(N, M, η, [1.0 0; 0.5 sqrt(3)/2]')
         tripartite = true
         for i in 1:2
@@ -552,7 +547,6 @@ immutable HoneycombLattice <: WrappedLatticeWithBasis{2}
     function HoneycombLattice(N::Vector{Int},
                               M::Matrix{Int}=diagm(N), # assumes pbc
                               η::Vector{Rational{Int}}=zeros(Rational{Int}, length(N)))
-        @assert length(N) == 2
         a = [1.5 sqrt(3)/2; 0 sqrt(3)]'
         basis = [0 0; 1.0 0]'
         return new(LatticeWithBasis{2}(N, M, η, a, basis))
@@ -602,7 +596,6 @@ immutable KagomeLattice <: WrappedLatticeWithBasis{2}
     function KagomeLattice(N::Vector{Int},
                            M::Matrix{Int}=diagm(N), # assumes pbc
                            η::Vector{Rational{Int}}=zeros(Rational{Int}, length(N)))
-        @assert length(N) == 2
         a = [2 0; 1 sqrt(3)]'
         basis = [0 0; 0.5 sqrt(3)/2; 1.0 0]'
         return new(LatticeWithBasis{2}(N, M, η, a, basis))
