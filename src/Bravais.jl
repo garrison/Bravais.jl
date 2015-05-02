@@ -51,15 +51,15 @@ end
 rowmajor_ind2sub(dims, index) = reverse(ind2sub(reverse(dims), index))
 
 abstract AbstractSiteNetwork <: AbstractVector{Vector{Int}}
-abstract AbstractLattice <: AbstractSiteNetwork
+abstract AbstractLattice{D} <: AbstractSiteNetwork
 
-abstract AbstractBravaisLattice <: AbstractLattice
-abstract AbstractLatticeWithBasis <: AbstractLattice
+abstract AbstractBravaisLattice{D} <: AbstractLattice{D}
+abstract AbstractLatticeWithBasis{D} <: AbstractLattice{D}
 
-abstract WrappedBravaisLattice <: AbstractBravaisLattice
-abstract WrappedLatticeWithBasis <: AbstractLatticeWithBasis
+abstract WrappedBravaisLattice{D} <: AbstractBravaisLattice{D}
+abstract WrappedLatticeWithBasis{D} <: AbstractLatticeWithBasis{D}
 
-immutable BravaisLattice <: AbstractBravaisLattice
+immutable BravaisLattice{D} <: AbstractBravaisLattice{D}
     N_tot::Int  # total number of sites
     N::Vector{Int}  # lattice extent in each dimension
     M::Matrix{Int}  # "M" matrix (will be diagonal for non-helical boundary)
@@ -76,7 +76,8 @@ immutable BravaisLattice <: AbstractBravaisLattice
 
         # check N
         @assert all(d_i -> d_i>0, N)
-        d = length(N)
+        @assert length(N) == D
+        d = D
         N_tot = prod(N)
 
         # check M
@@ -129,10 +130,10 @@ immutable BravaisLattice <: AbstractBravaisLattice
     end
 end
 
-immutable LatticeWithBasis <: AbstractLatticeWithBasis
+immutable LatticeWithBasis{D} <: AbstractLatticeWithBasis{D}
     N_tot::Int
     maxcoords::Vector{Int}
-    bravaislattice::BravaisLattice
+    bravaislattice::BravaisLattice{D}
     basis::Matrix{Float64}
     strides::Vector{Int}
 
@@ -141,7 +142,7 @@ immutable LatticeWithBasis <: AbstractLatticeWithBasis
                               η::Vector{Rational{Int}}=zeros(Rational{Int}, length(N)),
                               a::Matrix{Float64}=eye(length(N)),
                               basis::Matrix{Float64}=zeros(length(N), 1))
-        bravaislattice = BravaisLattice(N, M, η, a)
+        bravaislattice = BravaisLattice{D}(N, M, η, a)
 
         # check basis
         nbasis = size(basis)[2]
@@ -222,9 +223,7 @@ end
 
 dimensions(lattice::BravaisLattice) = lattice.N  # FIXME: rename this `extent`?
 
-ndimensions(lattice::BravaisLattice) = length(lattice.N)
-ndimensions(lattice::LatticeWithBasis) = length(lattice.maxcoords) - 1  # or just use length(twist(lattice))
-ndimensions(lattice::WrappedLatticeUnion) = ndimensions(lattice.lattice)
+ndimensions{D}(::AbstractLattice{D}) = D
 
 twist(lattice::BravaisLattice) = lattice.η
 twist(lattice::LatticeWithBasis) = bravais(lattice).η
@@ -298,7 +297,7 @@ function wraparound_site!(lattice::LatticeImplUnion, site::Vector{Int})
 
     # For lattice w/ basis, make sure the last index is in range, as
     # we cannot wrap it around.
-    if typeof(lattice) == LatticeWithBasis
+    if isa(lattice, LatticeWithBasis)
         if !(0 <= site[end] < mc[end])
             throw(ArgumentError("Site has invalid basis index."))
         end
@@ -403,14 +402,14 @@ function _hypercubic_sublattice_index(site::Vector{Int})
     return parity & 1
 end
 
-immutable HypercubicLattice <: WrappedBravaisLattice
-    lattice::BravaisLattice
+immutable HypercubicLattice{D} <: WrappedBravaisLattice{D}
+    lattice::BravaisLattice{D}
     bipartite::Bool
 
     function HypercubicLattice(N::Vector{Int},
                                M::Matrix{Int}=diagm(N), # assumes pbc
                                η::Vector{Rational{Int}}=zeros(Rational{Int}, length(N)))
-        bravaislattice = BravaisLattice(N, M, η)
+        bravaislattice = BravaisLattice{D}(N, M, η)
         d = length(N)
         bipartite = true
         for i in 1:d
@@ -476,15 +475,15 @@ function _triangular_sublattice_index(site::Vector{Int})
     return mod(site[2] - site[1], 3)
 end
 
-immutable TriangularLattice <: WrappedBravaisLattice
-    lattice::BravaisLattice
+immutable TriangularLattice <: WrappedBravaisLattice{2}
+    lattice::BravaisLattice{2}
     tripartite::Bool
 
     function TriangularLattice(N::Vector{Int},
                                M::Matrix{Int}=diagm(N), # assumes pbc
                                η::Vector{Rational{Int}}=zeros(Rational{Int}, length(N)))
         @assert length(N) == 2
-        bravaislattice = BravaisLattice(N, M, η, [1.0 0; 0.5 sqrt(3)/2]')
+        bravaislattice = BravaisLattice{2}(N, M, η, [1.0 0; 0.5 sqrt(3)/2]')
         tripartite = true
         for i in 1:2
             if M[i,i] != 0
@@ -543,8 +542,8 @@ end
 
 #= Begin specific lattice w/ basis implementations =#
 
-immutable HoneycombLattice <: WrappedLatticeWithBasis
-    lattice::LatticeWithBasis
+immutable HoneycombLattice <: WrappedLatticeWithBasis{2}
+    lattice::LatticeWithBasis{2}
 
     function HoneycombLattice(N::Vector{Int},
                               M::Matrix{Int}=diagm(N), # assumes pbc
@@ -552,7 +551,7 @@ immutable HoneycombLattice <: WrappedLatticeWithBasis
         @assert length(N) == 2
         a = [1.5 sqrt(3)/2; 0 sqrt(3)]'
         basis = [0 0; 1.0 0]'
-        return new(LatticeWithBasis(N, M, η, a, basis))
+        return new(LatticeWithBasis{2}(N, M, η, a, basis))
     end
 end
 
@@ -593,8 +592,8 @@ function siteneighbors(f, lattice::HoneycombLattice, ridx::Integer, ::Type{Val{:
     end
 end
 
-immutable KagomeLattice <: WrappedLatticeWithBasis
-    lattice::LatticeWithBasis
+immutable KagomeLattice <: WrappedLatticeWithBasis{2}
+    lattice::LatticeWithBasis{2}
 
     function KagomeLattice(N::Vector{Int},
                            M::Matrix{Int}=diagm(N), # assumes pbc
@@ -602,7 +601,7 @@ immutable KagomeLattice <: WrappedLatticeWithBasis
         @assert length(N) == 2
         a = [2 0; 1 sqrt(3)]'
         basis = [0 0; 0.5 sqrt(3)/2; 1.0 0]'
-        return new(LatticeWithBasis(N, M, η, a, basis))
+        return new(LatticeWithBasis{2}(N, M, η, a, basis))
     end
 end
 
@@ -649,6 +648,6 @@ end
 
 #= End specific lattice w/ basis implementations =#
 
-export AbstractLattice, BravaisLattice, HypercubicLattice, TriangularLattice, LatticeWithBasis, HoneycombLattice, KagomeLattice, bravais, isbravais, maxcoords, ndimensions, dimensions, twist, repeater, ishelical, nmomenta, momentum, kdotr, realspace, wraparound_site!, wraparound_site, wraparound, wraparoundη, translate_site!, translate_site, translate, translateη, momentumspace, siteneighbors, neighbors, isbipartite, istripartite, sublattice_index
+export AbstractLattice, AbstractBravaisLattice, AbstractLatticeWithBasis, BravaisLattice, HypercubicLattice, TriangularLattice, LatticeWithBasis, HoneycombLattice, KagomeLattice, bravais, isbravais, maxcoords, ndimensions, dimensions, twist, repeater, ishelical, nmomenta, momentum, kdotr, realspace, wraparound_site!, wraparound_site, wraparound, wraparoundη, translate_site!, translate_site, translate, translateη, momentumspace, siteneighbors, neighbors, isbipartite, istripartite, sublattice_index
 
 end # module
