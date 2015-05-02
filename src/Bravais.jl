@@ -433,7 +433,7 @@ isbipartite(lattice::HypercubicLattice) = lattice.bipartite
 istripartite(::HypercubicLattice) = false
 
 function sublattice_index(lattice::HypercubicLattice, site::Vector{Int})
-    @assert isbipartite(lattice)
+    isbipartite(lattice) || throw(ArgumentError("Hypercubic lattice must be bipartite for it to have sublattice indices."))
     return _hypercubic_sublattice_index(site)
 end
 
@@ -510,7 +510,7 @@ isbipartite(::TriangularLattice) = false # although "technically" it might be if
 istripartite(lattice::TriangularLattice) = lattice.tripartite
 
 function sublattice_index(lattice::TriangularLattice, site::Vector{Int})
-    @assert istripartite(lattice)
+    istripartite(lattice) || throw(ArgumentError("Triangular lattice must be tripartite for it to have sublattice indices."))
     return _triangular_sublattice_index(site)
 end
 

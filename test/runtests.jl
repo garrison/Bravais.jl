@@ -400,7 +400,7 @@ test_neighbor_sublattices(lattice, :nearest, [0,1])
 @test sublattice_index(lattice, 12) == 1
 
 lattice = HypercubicLattice([4, 3])
-@test_throws AssertionError sublattice_index(lattice, 1)
+@test_throws ArgumentError sublattice_index(lattice, 1)
 
 lattice = HypercubicLattice([4, 2])
 test_neighbor_sublattices(lattice, :nearest, [0,1])
@@ -423,7 +423,7 @@ test_neighbor_sublattices(lattice, :nearest, [0,1])
 @test sublattice_index(lattice, 6) == 1
 
 lattice = HypercubicLattice([6,1])
-@test_throws AssertionError sublattice_index(lattice, 1)
+@test_throws ArgumentError sublattice_index(lattice, 1)
 
 lattice = TriangularLattice([3,3])
 @test !isbipartite(lattice)
@@ -431,6 +431,7 @@ lattice = TriangularLattice([3,3])
 lattice = TriangularLattice([4,3])
 @test !isbipartite(lattice)
 @test !istripartite(lattice)
+@test_throws ArgumentError sublattice_index(lattice, 1)
 lattice = TriangularLattice([4,3], diagm([0,3]))
 @test !isbipartite(lattice)
 @test istripartite(lattice)
