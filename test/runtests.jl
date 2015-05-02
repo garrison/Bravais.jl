@@ -467,8 +467,7 @@ for (i, site) in enumerate(lattice)
     @test sublattice_index(lattice, i) == sublattice_index(lattice, site) == site[end]
 end
 
-function test_neighbor_distances(lattice, neigh=Val{1}, expected=1.0)
-    expected_squared = expected ^ 2
+function test_neighbor_distances(lattice, neigh=Val{1}, expected_squared=1)
     neighbors(lattice, neigh) do i, j, wrap
         diff = realspace(lattice, i) - realspace(lattice, j)
         dist_squared = dot(diff, diff)
@@ -477,6 +476,7 @@ function test_neighbor_distances(lattice, neigh=Val{1}, expected=1.0)
 end
 
 test_neighbor_distances(SquareLattice([4,6], diagm([0,0])))
+test_neighbor_distances(SquareLattice([4,6], diagm([0,0])), Val{2}, 2)
 test_neighbor_distances(TriangularLattice([4,6], diagm([0,0])))
 test_neighbor_distances(HoneycombLattice([4,6], diagm([0,0])))
 test_neighbor_distances(KagomeLattice([4,6], diagm([0,0])))

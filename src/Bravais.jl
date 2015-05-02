@@ -490,6 +490,11 @@ typealias ChainLattice HypercubicLattice{1}
 typealias SquareLattice HypercubicLattice{2}
 typealias CubicLattice HypercubicLattice{3}
 
+function siteneighbors(f, lattice::SquareLattice, ridx::Integer, ::Type{Val{2}}) # FIXME: ; double_count=false)
+    offsets = ([1,1], [-1,1])
+    _siteneighbors2d(f, lattice, ridx, offsets)
+end
+
 function _triangular_sublattice_index(site::Vector{Int})
     @assert length(site) == 2
     # FIXME: mod is slow
