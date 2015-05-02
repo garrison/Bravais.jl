@@ -469,6 +469,10 @@ function siteneighbors(f, lattice::HypercubicLattice, ridx::Integer, ::Type{Val{
     end
 end
 
+typealias ChainLattice HypercubicLattice{1}
+typealias SquareLattice HypercubicLattice{2}
+typealias CubicLattice HypercubicLattice{3}
+
 function _triangular_sublattice_index(site::Vector{Int})
     @assert length(site) == 2
     # FIXME: mod is slow
@@ -648,6 +652,6 @@ end
 
 #= End specific lattice w/ basis implementations =#
 
-export AbstractLattice, AbstractBravaisLattice, AbstractLatticeWithBasis, BravaisLattice, HypercubicLattice, TriangularLattice, LatticeWithBasis, HoneycombLattice, KagomeLattice, bravais, isbravais, maxcoords, ndimensions, dimensions, twist, repeater, ishelical, nmomenta, momentum, kdotr, realspace, wraparound_site!, wraparound_site, wraparound, wraparoundη, translate_site!, translate_site, translate, translateη, momentumspace, siteneighbors, neighbors, isbipartite, istripartite, sublattice_index
+export AbstractLattice, AbstractBravaisLattice, AbstractLatticeWithBasis, BravaisLattice, HypercubicLattice, ChainLattice, SquareLattice, CubicLattice, TriangularLattice, LatticeWithBasis, HoneycombLattice, KagomeLattice, bravais, isbravais, maxcoords, ndimensions, dimensions, twist, repeater, ishelical, nmomenta, momentum, kdotr, realspace, wraparound_site!, wraparound_site, wraparound, wraparoundη, translate_site!, translate_site, translate, translateη, momentumspace, siteneighbors, neighbors, isbipartite, istripartite, sublattice_index
 
 end # module

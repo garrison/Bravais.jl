@@ -52,15 +52,15 @@ Lattice construction is fairly simple.  Some examples below.
 
 A 1D chain with open boundary conditions::
 
-  HypercubicLattice([12], diagm([0]))
+  ChainLattice([12], diagm([0]))
 
 A 1D chain with periodic boundary conditions::
 
-  HypercubicLattice([12])
+  ChainLattice([12])
 
-A 2D "cylinder"::
+A 2D square lattice on a "cylinder"::
 
-  HypercubicLattice([12, 4], diagm([12, 0]))
+  SquareLattice([12,4], diagm([12,0]))
 
 A 2D triangular (aka hexagonal) lattice with PBC::
 
@@ -69,6 +69,10 @@ A 2D triangular (aka hexagonal) lattice with PBC::
 Honeycomb with PBC::
 
   HoneycombLattice([3,5])
+
+4D hypercube::
+
+  HypercubicLattice{4}([8,8,8,8])
 
 Documentation
 =============
