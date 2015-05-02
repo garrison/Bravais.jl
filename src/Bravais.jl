@@ -165,8 +165,8 @@ immutable LatticeWithBasis{D} <: AbstractLatticeWithBasis{D}
     end
 end
 
-isbravais(lattice::AbstractBravaisLattice) = true
-isbravais(lattice::AbstractLatticeWithBasis) = false
+isbravais(::AbstractBravaisLattice) = true
+isbravais(::AbstractLatticeWithBasis) = false
 
 @doc doc"Returns the underlying Bravais lattice" ->
 bravais(lattice::AbstractBravaisLattice) = lattice
@@ -367,10 +367,6 @@ function translateη(lattice::AbstractLattice, site_or_index::Union(Vector{Int},
     η = dot(wrap, twist(lattice))
     return idx, η
 end
-
-# symbols we want: whether to double count; also the type of neighbors (e.g. nearest, etc)
-#
-# search for: julia dispatch on symbol
 
 function neighbors(f, lattice::AbstractLattice, neigh=Val{1}) # FIXME: ; double_count=false)
     for ridx in 1:length(lattice)
