@@ -570,11 +570,7 @@ function sublattice_index(::HoneycombLattice, site::Vector{Int})
 end
 
 function siteneighbors(f, lattice::HoneycombLattice, ridx::Integer, ::Type{Val{1}}) #; double_count=false)
-    M = bravais(lattice).M
-    mc = maxcoords(lattice)
-
     site = lattice[ridx]
-
     if site[end] == 0
         offsets = ([0, 0, 1], [-1, 0, 1], [-1, 1, 1])
     else
@@ -606,11 +602,7 @@ function sublattice_index(::KagomeLattice, site::Vector{Int})
 end
 
 function siteneighbors(f, lattice::KagomeLattice, ridx::Integer, ::Type{Val{1}}) #; double_count=false)
-    M = bravais(lattice).M
-    mc = maxcoords(lattice)
-
     site = lattice[ridx]
-
     if site[end] == 0
         offsets = ([0, 0, 1], [0, -1, 1])
     elseif site[end] == 1
