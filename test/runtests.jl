@@ -194,9 +194,9 @@ wraparound(lattice, [7])
 @test_throws ArgumentError wraparound(lattice, [19])
 @test_throws ArgumentError wraparound(lattice, [-1])
 
-function test_nearest_neighbors(lattice, pairs)
+function test_neighbors(lattice, pairs, neigh=Val{1})
     mypairs = Set(pairs)
-    neighbors(lattice) do i, j, η
+    neighbors(lattice, neigh) do i, j, η
         pop!(mypairs, (i, j))
         # FIXME: check that η is correct
     end
@@ -211,11 +211,11 @@ pairs = [
     (5, 6),
     (6, 1),
 ]
-test_nearest_neighbors(ChainLattice([6], diagm([6]), [1//5]), pairs)
-test_nearest_neighbors(SquareLattice([6, 1]), pairs)
-test_nearest_neighbors(SquareLattice([1, 6]), pairs)
-test_nearest_neighbors(CubicLattice([6, 1, 1]), pairs)
-test_nearest_neighbors(HypercubicLattice{4}([1, 1, 6, 1]), pairs)
+test_neighbors(ChainLattice([6], diagm([6]), [1//5]), pairs)
+test_neighbors(SquareLattice([6, 1]), pairs)
+test_neighbors(SquareLattice([1, 6]), pairs)
+test_neighbors(CubicLattice([6, 1, 1]), pairs)
+test_neighbors(HypercubicLattice{4}([1, 1, 6, 1]), pairs)
 
 pairs = [
     (1, 3),
@@ -232,12 +232,12 @@ pairs = [
     (7, 8),
     ]
 # XXX:
-#test_nearest_neighbors(SquareLattice([4, 2]), pairs)
-#test_nearest_neighbors(HypercubicLattice{4}([4, 1, 2, 1]), pairs)
+#test_neighbors(SquareLattice([4, 2]), pairs)
+#test_neighbors(HypercubicLattice{4}([4, 1, 2, 1]), pairs)
 # make sure open boundary conditions in the 2 direction is equivalent
 # (unless i decide to remove this feature that doesn't double count these
 # links)
-test_nearest_neighbors(SquareLattice([4, 2], diagm([4, 0])), pairs)
+test_neighbors(SquareLattice([4, 2], diagm([4, 0])), pairs)
 
 # 4x3 Open
 pairs = [
@@ -262,7 +262,7 @@ pairs = [
     (10, 11),
     (11, 12),
 ]
-test_nearest_neighbors(SquareLattice([4, 3], diagm([4, 0])), pairs)
+test_neighbors(SquareLattice([4, 3], diagm([4, 0])), pairs)
 
 # 4x4
 pairs = [
@@ -299,9 +299,9 @@ pairs = [
     (15, 3),
     (16, 4),
 ]
-test_nearest_neighbors(SquareLattice([4, 4]), pairs)
-test_nearest_neighbors(HypercubicLattice{4}([1, 4, 1, 4]), pairs)
-test_nearest_neighbors(HypercubicLattice{4}([4, 1, 1, 4]), pairs)
+test_neighbors(SquareLattice([4, 4]), pairs)
+test_neighbors(HypercubicLattice{4}([1, 4, 1, 4]), pairs)
+test_neighbors(HypercubicLattice{4}([4, 1, 1, 4]), pairs)
 
 #=
 TEST(HypercubicLattice, NearestNeighbors_2x4) (
@@ -319,8 +319,8 @@ TEST(HypercubicLattice, NearestNeighbors_2x4) (
         (2, 6),
         (3, 7)
     )
-    test_nearest_neighbors(HypercubicLattice((2, 4)), pairs)
-    test_nearest_neighbors(HypercubicLattice((1, 2, 4, 1)), pairs)
+    test_neighbors(HypercubicLattice((2, 4)), pairs)
+    test_neighbors(HypercubicLattice((1, 2, 4, 1)), pairs)
 )
 
 template <class LatticeType>
