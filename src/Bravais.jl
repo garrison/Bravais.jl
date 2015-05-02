@@ -385,11 +385,36 @@ function neighborsη(f, lattice::AbstractLattice, neigh=Val{1}) # FIXME: ; doubl
     end
 end
 
-#= Begin specific Bravais lattice implementations =#
+#= Begin common code that will help with specific Bravais lattice implementations =#
 
 sublattice_index(lattice::AbstractLattice, ridx::Int) = sublattice_index(lattice, lattice[ridx])
 
 siteneighbors(f, lattice::AbstractLattice, site_or_index::Union(Vector{Int}, Integer)) = siteneighbors(f, lattice, site_or_index, 1)
+
+function _siteneighbors2d(f, lattice::AbstractLattice{2}, ridx::Integer, offsets)
+    M = repeater(lattice)
+    mc = maxcoords(lattice)
+
+    site = lattice[ridx]
+
+    for offset in offsets
+        newsite = site + offset
+        g(i) = M[i,i] == 0 && !(0 <= newsite[i] < mc[i])
+        if g(1) || g(2)
+            # In directions w/ OBC, do not provide the neighbors!
+            #
+            # NOTE: In e.g. a 3d lattice, similar logic will fail
+            # if there's one OBC direction and helical BCs in the
+            # two periodic directions.
+            continue
+        end
+        newidx, wrap = wraparound(lattice, newsite)
+        f(ridx, newidx, wrap)
+    end
+    nothing
+end
+
+#= Begin specific Bravais lattice implementations =#
 
 function _hypercubic_sublattice_index(site::Vector{Int})
     parity = 0
@@ -513,26 +538,8 @@ end
 # FIXME: many of these neighbor functions can use special handling when the lattice height or width is 1 in a direction.  or we could just forbid this.
 
 function siteneighbors(f, lattice::TriangularLattice, ridx::Integer, ::Type{Val{1}}) # FIXME: ; double_count=false)
-    M = lattice.lattice.M
-    mc = maxcoords(lattice)
-
-    site = lattice[ridx]
-
     offsets = ([1,0], [0,1], [-1,1])
-    for offset in offsets
-        newsite = site + offset
-        g(i) = M[i,i] == 0 && !(0 <= newsite[i] < mc[i])
-        if g(1) || g(2)
-            # In directions w/ OBC, do not provide the neighbors!
-            #
-            # NOTE: In e.g. a 3d lattice, similar logic will fail
-            # if there's one OBC direction and helical BCs in the
-            # two periodic directions.
-            continue
-        end
-        newidx, wrap = wraparound(lattice, newsite)
-        f(ridx, newidx, wrap)
-    end
+    _siteneighbors2d(f, lattice, ridx, offsets)
 end
 
 @delegate WrappedBravaisLattice.lattice [ Base.length, dimensions, ndimensions, twist, repeater, primvecs, recivecs, momentum, kdotr, momentumspace, realspace ]
@@ -574,20 +581,7 @@ function siteneighbors(f, lattice::HoneycombLattice, ridx::Integer, ::Type{Val{1
         @assert site[end] == 1
         offsets = double_count ? () : ([0, 0, -1], [1, 0, -1], [1, -1, -1])
     end
-    for offset in offsets
-        newsite = site + offset
-        g(i) = M[i,i] == 0 && !(0 <= newsite[i] < mc[i])
-        if g(1) || g(2)
-            # In directions w/ OBC, do not provide the neighbors!
-            #
-            # NOTE: In e.g. a 3d lattice, similar logic will fail
-            # if there's one OBC direction and helical BCs in the
-            # two periodic directions.
-            continue
-        end
-        newidx, wrap = wraparound(lattice, newsite)
-        f(ridx, newidx, wrap)
-    end
+    _siteneighbors2d(f, lattice, ridx, offsets)
 end
 
 immutable KagomeLattice <: WrappedLatticeWithBasis{2}
@@ -625,20 +619,7 @@ function siteneighbors(f, lattice::KagomeLattice, ridx::Integer, ::Type{Val{1}})
         @assert site[end] == 2
         offsets = ([0, 0, -2], [1, 0, -2])
     end
-    for offset in offsets
-        newsite = site + offset
-        g(i) = M[i,i] == 0 && !(0 <= newsite[i] < mc[i])
-        if g(1) || g(2)
-            # In directions w/ OBC, do not provide the neighbors!
-            #
-            # NOTE: In e.g. a 3d lattice, similar logic will fail
-            # if there's one OBC direction and helical BCs in the
-            # two periodic directions.
-            continue
-        end
-        newidx, wrap = wraparound(lattice, newsite)
-        f(ridx, newidx, wrap)
-    end
+    _siteneighbors2d(f, lattice, ridx, offsets)
 end
 
 @delegate WrappedLatticeWithBasis.lattice [ Base.length, realspace ]
