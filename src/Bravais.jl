@@ -372,13 +372,13 @@ end
 #
 # search for: julia dispatch on symbol
 
-function neighbors(f, lattice::AbstractLattice, neigh=Val{:nearest}) # FIXME: ; double_count=false)
+function neighbors(f, lattice::AbstractLattice, neigh=Val{1}) # FIXME: ; double_count=false)
     for ridx in 1:length(lattice)
         siteneighbors(f, lattice, ridx, neigh)
     end
 end
 
-function neighborsη(f, lattice::AbstractLattice, neigh=Val{:nearest}) # FIXME: ; double_count=false)
+function neighborsη(f, lattice::AbstractLattice, neigh=Val{1}) # FIXME: ; double_count=false)
     neighbors(lattice, neigh) do idx1, idx2, wrap
         η = dot(wrap, twist(lattice))
         f(idx1, idx2, η)
@@ -389,7 +389,7 @@ end
 
 sublattice_index(lattice::AbstractLattice, ridx::Int) = sublattice_index(lattice, lattice[ridx])
 
-siteneighbors(f, lattice::AbstractLattice, site_or_index::Union(Vector{Int}, Integer)) = siteneighbors(f, lattice, site_or_index, :nearest)
+siteneighbors(f, lattice::AbstractLattice, site_or_index::Union(Vector{Int}, Integer)) = siteneighbors(f, lattice, site_or_index, 1)
 
 function _hypercubic_sublattice_index(site::Vector{Int})
     parity = 0
@@ -447,7 +447,7 @@ end
 # primitive vectors so we can have a weird helical lattice.  how are
 # we going to support this??
 
-function siteneighbors{D}(f, lattice::HypercubicLattice{D}, ridx::Integer, ::Type{Val{:nearest}}) # FIXME: ; double_count=false)
+function siteneighbors{D}(f, lattice::HypercubicLattice{D}, ridx::Integer, ::Type{Val{1}}) # FIXME: ; double_count=false)
     M = lattice.lattice.M
     mc = maxcoords(lattice)
 
@@ -512,7 +512,7 @@ end
 
 # FIXME: many of these neighbor functions can use special handling when the lattice height or width is 1 in a direction.  or we could just forbid this.
 
-function siteneighbors(f, lattice::TriangularLattice, ridx::Integer, ::Type{Val{:nearest}}) # FIXME: ; double_count=false)
+function siteneighbors(f, lattice::TriangularLattice, ridx::Integer, ::Type{Val{1}}) # FIXME: ; double_count=false)
     M = lattice.lattice.M
     mc = maxcoords(lattice)
 
@@ -562,7 +562,7 @@ function sublattice_index(::HoneycombLattice, site::Vector{Int})
     return retval
 end
 
-function siteneighbors(f, lattice::HoneycombLattice, ridx::Integer, ::Type{Val{:nearest}}; double_count=false)
+function siteneighbors(f, lattice::HoneycombLattice, ridx::Integer, ::Type{Val{1}}; double_count=false)
     M = bravais(lattice).M
     mc = maxcoords(lattice)
 
@@ -611,7 +611,7 @@ function sublattice_index(::KagomeLattice, site::Vector{Int})
     return retval
 end
 
-function siteneighbors(f, lattice::KagomeLattice, ridx::Integer, ::Type{Val{:nearest}}) #; double_count=false)
+function siteneighbors(f, lattice::KagomeLattice, ridx::Integer, ::Type{Val{1}}) #; double_count=false)
     M = bravais(lattice).M
     mc = maxcoords(lattice)
 
