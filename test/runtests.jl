@@ -196,7 +196,7 @@ wraparound(lattice, [7])
 
 function test_nearest_neighbors(lattice, pairs)
     mypairs = Set(pairs)
-    neighbors(lattice, :nearest) do i, j, η
+    neighbors(lattice) do i, j, η
         pop!(mypairs, (i, j))
         # FIXME: check that η is correct
     end
@@ -385,7 +385,7 @@ end
 @test !istripartite(HypercubicLattice([4,4]))
 
 lattice = HypercubicLattice([4, 3], diagm([4,0]))
-test_neighbor_sublattices(lattice, :nearest, [0,1])
+test_neighbor_sublattices(lattice, Val{:nearest}, [0,1])
 @test sublattice_index(lattice, 1) == 0
 @test sublattice_index(lattice, 2) == 1
 @test sublattice_index(lattice, 3) == 0
@@ -403,7 +403,7 @@ lattice = HypercubicLattice([4, 3])
 @test_throws ArgumentError sublattice_index(lattice, 1)
 
 lattice = HypercubicLattice([4, 2])
-test_neighbor_sublattices(lattice, :nearest, [0,1])
+test_neighbor_sublattices(lattice, Val{:nearest}, [0,1])
 @test sublattice_index(lattice, 1) == 0
 @test sublattice_index(lattice, 2) == 1
 @test sublattice_index(lattice, 3) == 1
@@ -414,7 +414,7 @@ test_neighbor_sublattices(lattice, :nearest, [0,1])
 @test sublattice_index(lattice, 8) == 0
 
 lattice = HypercubicLattice([6])
-test_neighbor_sublattices(lattice, :nearest, [0,1])
+test_neighbor_sublattices(lattice, Val{:nearest}, [0,1])
 @test sublattice_index(lattice, 1) == 0
 @test sublattice_index(lattice, 2) == 1
 @test sublattice_index(lattice, 3) == 0
@@ -440,7 +440,7 @@ lattice = TriangularLattice([4,3], diagm([0,0]))
 @test istripartite(lattice)
 
 lattice = TriangularLattice([3,3])
-test_neighbor_sublattices(lattice, :nearest, [0,1,2])
+test_neighbor_sublattices(lattice, Val{:nearest}, [0,1,2])
 @test sublattice_index(lattice, 1) == 0
 @test sublattice_index(lattice, 2) == 1
 @test sublattice_index(lattice, 3) == 2
@@ -454,7 +454,7 @@ test_neighbor_sublattices(lattice, :nearest, [0,1,2])
 lattice = HoneycombLattice([5,5])
 @test isbipartite(lattice)
 @test !istripartite(lattice)
-test_neighbor_sublattices(lattice, :nearest, [0,1])
+test_neighbor_sublattices(lattice, Val{:nearest}, [0,1])
 for (i, site) in enumerate(lattice)
     @test sublattice_index(lattice, i) == sublattice_index(lattice, site) == site[end] == ((i $ 1) & 1)
 end
@@ -462,7 +462,7 @@ end
 lattice = KagomeLattice([4,3])
 @test !isbipartite(lattice)
 @test istripartite(lattice)
-test_neighbor_sublattices(lattice, :nearest, [0,1,2])
+test_neighbor_sublattices(lattice, Val{:nearest}, [0,1,2])
 for (i, site) in enumerate(lattice)
     @test sublattice_index(lattice, i) == sublattice_index(lattice, site) == site[end]
 end
@@ -476,7 +476,7 @@ function test_neighbor_distances(lattice, neigh, expected=1.0)
     end
 end
 
-test_neighbor_distances(HypercubicLattice([4,6], diagm([0,0])), :nearest)
-test_neighbor_distances(TriangularLattice([4,6], diagm([0,0])), :nearest)
-test_neighbor_distances(HoneycombLattice([4,6], diagm([0,0])), :nearest)
-test_neighbor_distances(KagomeLattice([4,6], diagm([0,0])), :nearest)
+test_neighbor_distances(HypercubicLattice([4,6], diagm([0,0])), Val{:nearest})
+test_neighbor_distances(TriangularLattice([4,6], diagm([0,0])), Val{:nearest})
+test_neighbor_distances(HoneycombLattice([4,6], diagm([0,0])), Val{:nearest})
+test_neighbor_distances(KagomeLattice([4,6], diagm([0,0])), Val{:nearest})

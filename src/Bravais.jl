@@ -376,13 +376,13 @@ end
 #
 # search for: julia dispatch on symbol
 
-function neighbors(f, lattice::AbstractLattice, neigh=:nearest) # FIXME: ; double_count=false)
+function neighbors(f, lattice::AbstractLattice, neigh=Val{:nearest}) # FIXME: ; double_count=false)
     for ridx in 1:length(lattice)
         siteneighbors(f, lattice, ridx, neigh)
     end
 end
 
-function neighborsη(f, lattice::AbstractLattice, neigh=:nearest) # FIXME: ; double_count=false)
+function neighborsη(f, lattice::AbstractLattice, neigh=Val{:nearest}) # FIXME: ; double_count=false)
     neighbors(lattice, neigh) do idx1, idx2, wrap
         η = dot(wrap, twist(lattice))
         f(idx1, idx2, η)
@@ -392,6 +392,8 @@ end
 #= Begin specific Bravais lattice implementations =#
 
 sublattice_index(lattice::AbstractLattice, ridx::Int) = sublattice_index(lattice, lattice[ridx])
+
+siteneighbors(f, lattice::AbstractLattice, site_or_index::Union(Vector{Int}, Integer)) = siteneighbors(f, lattice, site_or_index, :nearest)
 
 function _hypercubic_sublattice_index(site::Vector{Int})
     parity = 0
@@ -450,25 +452,21 @@ end
 # primitive vectors so we can have a weird helical lattice.  how are
 # we going to support this??
 
-function siteneighbors(f, lattice::HypercubicLattice, ridx::Integer, neigh=:nearest) # FIXME: ; double_count=false)
+function siteneighbors(f, lattice::HypercubicLattice, ridx::Integer, ::Type{Val{:nearest}}) # FIXME: ; double_count=false)
     M = lattice.lattice.M
     mc = maxcoords(lattice)
 
     site = lattice[ridx]
 
-    if neigh == :nearest
-        for i in 1:ndimensions(lattice)
-            newsite = copy(site)
-            newsite[i] += 1
-            if M[i,i] <= 1 && newsite[i] >= mc[i]
-                # In directions w/ OBC or length one, do not provide the neighbors!
-                continue
-            end
-            newidx, wrap = wraparound(lattice, newsite)
-            f(ridx, newidx, wrap)
+    for i in 1:ndimensions(lattice)
+        newsite = copy(site)
+        newsite[i] += 1
+        if M[i,i] <= 1 && newsite[i] >= mc[i]
+            # In directions w/ OBC or length one, do not provide the neighbors!
+            continue
         end
-    else
-        throw(ArgumentError("Invalid neighbor type: $neigh"))
+        newidx, wrap = wraparound(lattice, newsite)
+        f(ridx, newidx, wrap)
     end
 end
 
@@ -516,30 +514,26 @@ end
 
 # FIXME: many of these neighbor functions can use special handling when the lattice height or width is 1 in a direction.  or we could just forbid this.
 
-function siteneighbors(f, lattice::TriangularLattice, ridx::Integer, neigh=:nearest) # FIXME: ; double_count=false)
+function siteneighbors(f, lattice::TriangularLattice, ridx::Integer, ::Type{Val{:nearest}}) # FIXME: ; double_count=false)
     M = lattice.lattice.M
     mc = maxcoords(lattice)
 
     site = lattice[ridx]
 
-    if neigh == :nearest
-        offsets = ([1,0], [0,1], [-1,1])
-        for offset in offsets
-            newsite = site + offset
-            g(i) = M[i,i] == 0 && !(0 <= newsite[i] < mc[i])
-            if g(1) || g(2)
-                # In directions w/ OBC, do not provide the neighbors!
-                #
-                # NOTE: In e.g. a 3d lattice, similar logic will fail
-                # if there's one OBC direction and helical BCs in the
-                # two periodic directions.
-                continue
-            end
-            newidx, wrap = wraparound(lattice, newsite)
-            f(ridx, newidx, wrap)
+    offsets = ([1,0], [0,1], [-1,1])
+    for offset in offsets
+        newsite = site + offset
+        g(i) = M[i,i] == 0 && !(0 <= newsite[i] < mc[i])
+        if g(1) || g(2)
+            # In directions w/ OBC, do not provide the neighbors!
+            #
+            # NOTE: In e.g. a 3d lattice, similar logic will fail
+            # if there's one OBC direction and helical BCs in the
+            # two periodic directions.
+            continue
         end
-    else
-        throw(ArgumentError("Invalid neighbor type: $neigh"))
+        newidx, wrap = wraparound(lattice, newsite)
+        f(ridx, newidx, wrap)
     end
 end
 
@@ -571,35 +565,31 @@ function sublattice_index(::HoneycombLattice, site::Vector{Int})
     return retval
 end
 
-function siteneighbors(f, lattice::HoneycombLattice, ridx::Integer, neigh=:nearest; double_count=false)
+function siteneighbors(f, lattice::HoneycombLattice, ridx::Integer, ::Type{Val{:nearest}}; double_count=false)
     M = bravais(lattice).M
     mc = maxcoords(lattice)
 
     site = lattice[ridx]
 
-    if neigh == :nearest
-        if site[end] == 0
-            offsets = ([0, 0, 1], [-1, 0, 1], [-1, 1, 1])
-        else
-            @assert site[end] == 1
-            offsets = double_count ? () : ([0, 0, -1], [1, 0, -1], [1, -1, -1])
-        end
-        for offset in offsets
-            newsite = site + offset
-            g(i) = M[i,i] == 0 && !(0 <= newsite[i] < mc[i])
-            if g(1) || g(2)
-                # In directions w/ OBC, do not provide the neighbors!
-                #
-                # NOTE: In e.g. a 3d lattice, similar logic will fail
-                # if there's one OBC direction and helical BCs in the
-                # two periodic directions.
-                continue
-            end
-            newidx, wrap = wraparound(lattice, newsite)
-            f(ridx, newidx, wrap)
-        end
+    if site[end] == 0
+        offsets = ([0, 0, 1], [-1, 0, 1], [-1, 1, 1])
     else
-        throw(ArgumentError("Invalid neighbor type: $neigh"))
+        @assert site[end] == 1
+        offsets = double_count ? () : ([0, 0, -1], [1, 0, -1], [1, -1, -1])
+    end
+    for offset in offsets
+        newsite = site + offset
+        g(i) = M[i,i] == 0 && !(0 <= newsite[i] < mc[i])
+        if g(1) || g(2)
+            # In directions w/ OBC, do not provide the neighbors!
+            #
+            # NOTE: In e.g. a 3d lattice, similar logic will fail
+            # if there's one OBC direction and helical BCs in the
+            # two periodic directions.
+            continue
+        end
+        newidx, wrap = wraparound(lattice, newsite)
+        f(ridx, newidx, wrap)
     end
 end
 
@@ -625,37 +615,33 @@ function sublattice_index(::KagomeLattice, site::Vector{Int})
     return retval
 end
 
-function siteneighbors(f, lattice::KagomeLattice, ridx::Integer, neigh=:nearest) #; double_count=false)
+function siteneighbors(f, lattice::KagomeLattice, ridx::Integer, ::Type{Val{:nearest}}) #; double_count=false)
     M = bravais(lattice).M
     mc = maxcoords(lattice)
 
     site = lattice[ridx]
 
-    if neigh == :nearest
-        if site[end] == 0
-            offsets = ([0, 0, 1], [0, -1, 1])
-        elseif site[end] == 1
-            offsets = ([0, 0, 1], [-1, 1, 1])
-        else
-            @assert site[end] == 2
-            offsets = ([0, 0, -2], [1, 0, -2])
-        end
-        for offset in offsets
-            newsite = site + offset
-            g(i) = M[i,i] == 0 && !(0 <= newsite[i] < mc[i])
-            if g(1) || g(2)
-                # In directions w/ OBC, do not provide the neighbors!
-                #
-                # NOTE: In e.g. a 3d lattice, similar logic will fail
-                # if there's one OBC direction and helical BCs in the
-                # two periodic directions.
-                continue
-            end
-            newidx, wrap = wraparound(lattice, newsite)
-            f(ridx, newidx, wrap)
-        end
+    if site[end] == 0
+        offsets = ([0, 0, 1], [0, -1, 1])
+    elseif site[end] == 1
+        offsets = ([0, 0, 1], [-1, 1, 1])
     else
-        throw(ArgumentError("Invalid neighbor type: $neigh"))
+        @assert site[end] == 2
+        offsets = ([0, 0, -2], [1, 0, -2])
+    end
+    for offset in offsets
+        newsite = site + offset
+        g(i) = M[i,i] == 0 && !(0 <= newsite[i] < mc[i])
+        if g(1) || g(2)
+            # In directions w/ OBC, do not provide the neighbors!
+            #
+            # NOTE: In e.g. a 3d lattice, similar logic will fail
+            # if there's one OBC direction and helical BCs in the
+            # two periodic directions.
+            continue
+        end
+        newidx, wrap = wraparound(lattice, newsite)
+        f(ridx, newidx, wrap)
     end
 end
 
