@@ -683,6 +683,7 @@ export
     momentumspace,
     siteneighbors,
     neighbors,
+    neighborsη,
     isbipartite,
     istripartite,
     sublattice_index
