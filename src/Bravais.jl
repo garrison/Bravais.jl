@@ -647,6 +647,44 @@ end
 
 #= End specific lattice w/ basis implementations =#
 
-export AbstractLattice, AbstractBravaisLattice, AbstractLatticeWithBasis, BravaisLattice, HypercubicLattice, ChainLattice, SquareLattice, CubicLattice, TriangularLattice, LatticeWithBasis, HoneycombLattice, KagomeLattice, bravais, isbravais, maxcoords, ndimensions, dimensions, twist, repeater, ishelical, nmomenta, momentum, kdotr, realspace, wraparound_site!, wraparound_site, wraparound, wraparoundη, translate_site!, translate_site, translate, translateη, momentumspace, siteneighbors, neighbors, isbipartite, istripartite, sublattice_index
+export
+    AbstractLattice,
+    AbstractBravaisLattice,
+    AbstractLatticeWithBasis,
+    BravaisLattice,
+    HypercubicLattice,
+    ChainLattice,
+    SquareLattice,
+    CubicLattice,
+    TriangularLattice,
+    LatticeWithBasis,
+    HoneycombLattice,
+    KagomeLattice,
+    bravais,
+    isbravais,
+    maxcoords,
+    ndimensions,
+    dimensions,
+    twist,
+    repeater,
+    ishelical,
+    nmomenta,
+    momentum,
+    kdotr,
+    realspace,
+    wraparound_site!,
+    wraparound_site,
+    wraparound,
+    wraparoundη,
+    translate_site!,
+    translate_site,
+    translate,
+    translateη,
+    momentumspace,
+    siteneighbors,
+    neighbors,
+    isbipartite,
+    istripartite,
+    sublattice_index
 
 end # module
