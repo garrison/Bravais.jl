@@ -648,6 +648,7 @@ end
 #= End specific lattice w/ basis implementations =#
 
 export
+    AbstractSiteNetwork,
     AbstractLattice,
     AbstractBravaisLattice,
     AbstractLatticeWithBasis,
