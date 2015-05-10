@@ -647,6 +647,36 @@ end
 
 #= End specific lattice w/ basis implementations =#
 
+#= Begin cache objects =#
+
+@compat @doc doc"""
+Precomputes the results of the translateη function on each site.
+
+ltrc = LatticeTranslationCache(lattice, direction)
+translateη(ltrc, site)
+""" ->
+immutable LatticeTranslationCache{LatticeType<:AbstractLattice}
+    lattice::LatticeType
+    direction::Int
+    cache::Vector{Tuple{Int,Rational{Int}}}
+
+    function LatticeTranslationCache(lattice, direction)
+        cache = @compat Tuple{Int,Rational{Int}}[]
+        sizehint!(cache, length(lattice))
+        for i in 1:length(lattice)
+            push!(cache, translateη(lattice, i, direction))
+        end
+        new(lattice, Int(direction), cache)
+    end
+end
+
+LatticeTranslationCache{LatticeType<:AbstractLattice}(lattice::LatticeType, direction::Integer) = LatticeTranslationCache{LatticeType}(lattice, direction)
+
+translateη{LatticeType<:AbstractLattice}(ltrc::LatticeTranslationCache{LatticeType}, j::Integer) = ltrc.cache[j]
+translateη{LatticeType<:AbstractLattice}(ltrc::LatticeTranslationCache{LatticeType}, site::Vector{Int}) = translateη(ltrc, findfirst(ltrc.lattice, site))
+
+#= End cache objects =#
+
 export
     AbstractSiteNetwork,
     AbstractLattice,
@@ -687,6 +717,7 @@ export
     neighborsη,
     isbipartite,
     istripartite,
-    sublattice_index
+    sublattice_index,
+    LatticeTranslationCache
 
 end # module
