@@ -115,6 +115,7 @@ for lattice in lattices
     sz = length(lattice)
     for i in 1:d
         if M[i,i] == 0
+            @test_throws ArgumentError LatticeTranslationCache(lattice, i)
             continue
         end
 
@@ -124,16 +125,18 @@ for lattice in lattices
 
         # Translate as many times as we need to in each dimension
         for j in 1:d
-            ltrc = LatticeTranslationCache(lattice, j)
-            for z in 1:M[i,j]
-                new_indices = @compat Tuple{Int, Rational{Int}}[]
-                sizehint!(new_indices, sz)
-                for (s, old_η) in indices
-                    newidx, wrap_η = translateη(lattice, s, j)
-                    @test (newidx, wrap_η) == translateη(ltrc, s)
-                    push!(new_indices, (newidx, wrap_η + old_η))
+            if M[i,j] != 0
+                ltrc = LatticeTranslationCache(lattice, j)
+                for z in 1:M[i,j]
+                    new_indices = @compat Tuple{Int, Rational{Int}}[]
+                    sizehint!(new_indices, sz)
+                    for (s, old_η) in indices
+                        newidx, wrap_η = translateη(lattice, s, j)
+                        @test (newidx, wrap_η) == translateη(ltrc, s)
+                        push!(new_indices, (newidx, wrap_η + old_η))
+                    end
+                    indices = new_indices
                 end
-                indices = new_indices
             end
         end
 
