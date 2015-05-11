@@ -204,7 +204,16 @@ end
 Base.findfirst(lattice::AbstractLattice, site::Vector{Int}) = site ∉ lattice ? 0 : dot(site, _strides(lattice)) + 1
 
 Base.start(lattice::AbstractLattice) = zeros(Int, length(maxcoords(lattice)))
-Base.done(lattice::AbstractLattice, site::Vector{Int}) = !all(site .< maxcoords(lattice))
+
+function Base.done(lattice::AbstractLattice, site::Vector{Int})
+    mc = maxcoords(lattice)
+    @assert length(site) == length(mc)
+    for i in 1:length(mc)
+        site[i] < mc[i] || return true
+    end
+    return false
+end
+
 function Base.next(lattice::AbstractLattice, site::Vector{Int})
     newsite = copy(site)
     mc = maxcoords(lattice)
