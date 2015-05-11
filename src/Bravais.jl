@@ -192,7 +192,14 @@ function Base.getindex(lattice::AbstractLattice, index::Integer)
     return [rowmajor_ind2sub(tuple(maxcoords(lattice)...), index)...] - 1
 end
 
-Base.in(site::Vector{Int}, lattice::AbstractLattice) = length(maxcoords(lattice)) == length(site) && all(0 .<= site .< maxcoords(lattice))
+function Base.in(site::Vector{Int}, lattice::AbstractLattice)
+    mc = maxcoords(lattice)
+    length(mc) == length(site) || return false
+    for i in 1:length(site)
+        0 <= site[i] < mc[i] || return false
+    end
+    return true
+end
 
 Base.findfirst(lattice::AbstractLattice, site::Vector{Int}) = site ∉ lattice ? 0 : dot(site, _strides(lattice)) + 1
 
