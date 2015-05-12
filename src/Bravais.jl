@@ -189,7 +189,16 @@ Base.size(lattice::AbstractLattice) = (length(lattice),)
 
 function Base.getindex(lattice::AbstractLattice, index::Integer)
     checkbounds(lattice, index)
-    return [rowmajor_ind2sub(tuple(maxcoords(lattice)...), index)...] - 1
+    # Alternatively: return [rowmajor_ind2sub(tuple(maxcoords(lattice)...), index)...] - 1
+    strides = _strides(lattice)
+    rv = Array(Int, length(strides))
+    r = index - 1
+    for i in 1:length(strides)-1
+        d, r = divrem(r, strides[i])
+        rv[i] = d
+    end
+    rv[end] = r
+    return rv
 end
 
 function Base.in(site::Vector{Int}, lattice::AbstractLattice)
