@@ -75,13 +75,14 @@ for lattice in lattices
         continue
     end
 
-    len = length(lattice)
+    len = @inferred length(lattice)
     @test size(lattice) == (len,)
 
     @test_throws BoundsError lattice[0]
     @test_throws BoundsError lattice[len+1]
 
-    @test findfirst(lattice, maxcoords(lattice)) == 0
+    @test @inferred(findfirst(lattice, maxcoords(lattice))) == 0
+    @inferred(in(@inferred(getindex(lattice, 1)),lattice))
 
     last = false
     for (i, site) in enumerate(lattice)
@@ -94,16 +95,16 @@ for lattice in lattices
             last = true
         end
 
-        wraparound(lattice, site) # FIXME: actually test something here
+        @inferred wraparound(lattice, site) # FIXME: actually test something here
 
-        realspace(lattice, site) # FIXME: actually test something here
+        @inferred realspace(lattice, site) # FIXME: actually test something here
         realspace(lattice, site, ones(Int, ndimensions(lattice))) # FIXME: actually test something here
     end
     @test last == true
 
-    d = ndimensions(lattice)
-    η = twist(lattice)
-    M = repeater(lattice)
+    d = @inferred ndimensions(lattice)
+    η = @inferred twist(lattice)
+    M = @inferred repeater(lattice)
 
     @test ishelical(lattice) == !isdiag(repeater(lattice))
 
@@ -131,8 +132,8 @@ for lattice in lattices
                     new_indices = @compat Tuple{Int, Rational{Int}}[]
                     sizehint!(new_indices, sz)
                     for (s, old_η) in indices
-                        newidx, wrap_η = translateη(lattice, s, j)
-                        @test (newidx, wrap_η) == translateη(ltrc, s)
+                        newidx, wrap_η = @inferred translateη(lattice, s, j)
+                        @test (newidx, wrap_η) == @inferred translateη(ltrc, s)
                         push!(new_indices, (newidx, wrap_η + old_η))
                     end
                     indices = new_indices
@@ -152,30 +153,30 @@ for lattice in lattices
     end
 
     # Check the momenta across the boundary conditions
-    n_k_idx = nmomenta(lattice)
+    n_k_idx = @inferred nmomenta(lattice)
     for site in lattice
         for k_idx in 1:n_k_idx
             for i in 1:d
                 if M[i,i] != 0
                     site2 = site + vec(M[i,:])
                     exp1 = exp(im * (kdotr(lattice, k_idx, site) + 2π * η[i]))
-                    exp2 = exp(im * kdotr(lattice, k_idx, site2))
-                    idx, η_wrap = wraparoundη(lattice, site2)
+                    exp2 = exp(im * @inferred(kdotr(lattice, k_idx, site2)))
+                    idx, η_wrap = @inferred wraparoundη(lattice, site2)
                     exp3 = exp(im * (kdotr(lattice, k_idx, idx) + 2π * η_wrap))
                     @test_approx_eq exp1 exp2
                     @test_approx_eq exp1 exp3
                     for charge in (1, 3)
-                        k_total = momentum(lattice, k_idx, charge)
+                        k_total = @inferred momentum(lattice, k_idx, charge)
                         exp1 = exp(im * (kdotr(lattice, k_total, site) + 2π * η[i] * charge))
                         exp2 = exp(im * kdotr(lattice, k_total, site2))
                         exp3 = exp(im * (kdotr(lattice, k_total, idx) + 2π * η_wrap * charge))
                         @test_approx_eq exp1 exp2
                         @test_approx_eq exp1 exp3
                     end
-                    k = momentumspace(lattice, k_idx)
+                    k = @inferred momentumspace(lattice, k_idx)
                     exp1 = exp(im * (dot(k, realspace(lattice, site)) + 2π * η[i]))
                     exp2 = exp(im * dot(k, realspace(lattice, site2)))
-                    site3, wrap = wraparound_site(lattice, site2)
+                    site3, wrap = @inferred wraparound_site(lattice, site2)
                     exp3 = exp(im * (dot(k, realspace(lattice, site3)) + 2π * dot(wrap, twist(lattice))))
                     @test_approx_eq exp1 exp2
                     @test_approx_eq exp1 exp3
@@ -186,7 +187,8 @@ for lattice in lattices
 end
 
 lattice = KagomeLattice([2,3])
-wraparound(lattice, [4,0,0])
+# try a valid wraparound
+@inferred wraparound(lattice, [4,0,0])
 # invalid basis index
 @test_throws ArgumentError wraparound(lattice, [4,0,3])
 # attempt to "translate" in direction of the basis index
@@ -194,8 +196,8 @@ wraparound(lattice, [4,0,0])
 
 # Invalid wraparound for OBC
 lattice = ChainLattice([8], diagm([0]))
-wraparound(lattice, [0])
-wraparound(lattice, [7])
+@inferred wraparound(lattice, [0])
+@inferred wraparound(lattice, [7])
 @test_throws ArgumentError wraparound(lattice, [19])
 @test_throws ArgumentError wraparound(lattice, [-1])
 
@@ -373,8 +375,11 @@ TEST(HypercubicLattice, NextNearestNeighbors_PBC) (
 =#
 
 function test_neighbor_sublattices(lattice, allowed, neigh=Val{1})
+    @inferred isbipartite(lattice)
+    @inferred istripartite(lattice)
+
     neighbors(lattice, neigh) do i, j, wrap
-        ind1 = sublattice_index(lattice, i)
+        ind1 = @inferred sublattice_index(lattice, i)
         ind2 = sublattice_index(lattice, j)
         @test ind1 in allowed
         @test ind2 in allowed
