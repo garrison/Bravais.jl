@@ -275,8 +275,8 @@ nmomenta(lattice::WrappedBravaisLattice) = nmomenta(lattice.lattice)
 
 # FIXME: need a way to iterate momenta
 
-momentum(lattice::BravaisLattice, idx) = lattice.momenta[:, idx]
-function momentum{D}(lattice::BravaisLattice{D}, idx, charge::Int)
+momentum(lattice::BravaisLattice, idx::Integer) = lattice.momenta[:, idx]
+function momentum{D}(lattice::BravaisLattice{D}, idx::Integer, charge::Integer)
     # "total momentum", really.  note that this may return things greater than one.
     x1 = momentum(lattice, idx)
     if charge == 1
