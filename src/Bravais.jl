@@ -175,8 +175,8 @@ bravais(lattice::AbstractBravaisLattice) = lattice
 bravais(lattice::LatticeWithBasis) = lattice.bravaislattice
 bravais(lattice::WrappedLatticeWithBasis) = bravais(lattice.lattice)
 
-typealias LatticeImplUnion{D} Union(BravaisLattice{D}, LatticeWithBasis{D})
-typealias WrappedLatticeUnion{D} Union(WrappedBravaisLattice{D}, WrappedLatticeWithBasis{D})
+typealias LatticeImplUnion{D} @compat Union{BravaisLattice{D}, LatticeWithBasis{D}}
+typealias WrappedLatticeUnion{D} @compat Union{WrappedBravaisLattice{D}, WrappedLatticeWithBasis{D}}
 
 _strides(lattice::LatticeImplUnion) = lattice.strides
 _strides(lattice::WrappedLatticeUnion) = _strides(lattice.lattice)
@@ -360,13 +360,13 @@ wraparound_site!(lattice::WrappedLatticeUnion, site::Vector{Int}) = wraparound_s
 wraparound_site(lattice::AbstractLattice, site::Vector{Int}) = wraparound_site!(lattice, copy(site))
 wraparound_site(lattice::AbstractLattice, index::Integer) = wraparound_site(lattice, lattice[index])
 
-function wraparound(lattice::AbstractLattice, site_or_index::Union(Vector{Int}, Integer))
+function wraparound(lattice::AbstractLattice, site_or_index::@compat(Union{Vector{Int}, Integer}))
     site, wrap = wraparound_site(lattice, site_or_index)
     idx = findfirst(lattice, site)
     return idx, wrap
 end
 
-function wraparoundη(lattice::AbstractLattice, site_or_index::Union(Vector{Int}, Integer))
+function wraparoundη(lattice::AbstractLattice, site_or_index::@compat(Union{Vector{Int}, Integer}))
     idx, wrap = wraparound(lattice, site_or_index)
     η = dot(wrap, twist(lattice))
     return idx, η
@@ -383,13 +383,13 @@ end
 translate_site(lattice::AbstractLattice, site::Vector{Int}, direction::Integer) = translate_site!(lattice, copy(site), direction)
 translate_site(lattice::AbstractLattice, index::Integer, direction::Integer) = translate_site(lattice, lattice[index], direction)
 
-function translate(lattice::AbstractLattice, site_or_index::Union(Vector{Int}, Integer), direction::Integer)
+function translate(lattice::AbstractLattice, site_or_index::@compat(Union{Vector{Int}, Integer}), direction::Integer)
     site, wrap = translate_site(lattice, site_or_index, direction)
     idx = findfirst(lattice, site)
     return idx, wrap
 end
 
-function translateη(lattice::AbstractLattice, site_or_index::Union(Vector{Int}, Integer), direction::Integer)
+function translateη(lattice::AbstractLattice, site_or_index::@compat(Union{Vector{Int}, Integer}), direction::Integer)
     idx, wrap = translate(lattice, site_or_index, direction)
     η = dot(wrap, twist(lattice))
     return idx, η
@@ -412,7 +412,7 @@ end
 
 sublattice_index(lattice::AbstractLattice, ridx::Int) = sublattice_index(lattice, lattice[ridx])
 
-siteneighbors(f, lattice::AbstractLattice, site_or_index::Union(Vector{Int}, Integer)) = siteneighbors(f, lattice, site_or_index, 1)
+siteneighbors(f, lattice::AbstractLattice, site_or_index::@compat(Union{Vector{Int}, Integer})) = siteneighbors(f, lattice, site_or_index, 1)
 
 function _siteneighbors2d(f, lattice::AbstractLattice{2}, ridx::Integer, offsets)
     M = repeater(lattice)
