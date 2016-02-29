@@ -273,6 +273,8 @@ recivecs(lattice::BravaisLattice) = lattice.b
 nmomenta(lattice::BravaisLattice) = size(lattice.momenta, 2)
 nmomenta(lattice::WrappedBravaisLattice) = nmomenta(lattice.lattice)
 
+eachmomentumindex(lattice::AbstractBravaisLattice) = 1:nmomenta(lattice)
+
 # FIXME: need a way to iterate momenta
 
 momentum(lattice::BravaisLattice, idx::Integer) = lattice.momenta[:, idx]
@@ -727,6 +729,7 @@ export
     repeater,
     ishelical,
     nmomenta,
+    eachmomentumindex,
     momentum,
     kdotr,
     realspace,

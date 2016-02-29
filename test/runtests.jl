@@ -154,6 +154,7 @@ for lattice in lattices
 
     # Check the momenta across the boundary conditions
     n_k_idx = @inferred nmomenta(lattice)
+    @test 1:n_k_idx == @inferred eachmomentumindex(lattice)
     for site in lattice
         for k_idx in 1:n_k_idx
             for i in 1:d
