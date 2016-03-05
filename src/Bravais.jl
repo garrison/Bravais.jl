@@ -303,7 +303,6 @@ kdotr(lattice::BravaisLattice, k, ridx::Integer) = kdotr(lattice, k, lattice[rid
 
 momentumspace(lattice::BravaisLattice, k::Vector{Rational{Int}}) = lattice.b * k
 momentumspace(lattice::BravaisLattice, kidx::Integer) = momentumspace(lattice, momentum(lattice, kidx))
-momentumspace(lattice::WrappedBravaisLattice, args...) = momentumspace(lattice.lattice, args...)
 # FIXME: make it possible to get momentum-space points translated to the first brillouin zone (momentumspace_bz)
 
 realspace(lattice::BravaisLattice, site::Vector{Int}) = lattice.a * site
