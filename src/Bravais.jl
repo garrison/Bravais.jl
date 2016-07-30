@@ -37,7 +37,7 @@ macro delegate(source, targets)
     for funcname in funcnames
         push!(fdefs, quote
                          ($funcname)(a::($typename), args...) =
-                             ($funcname)(a.($fieldname), args...)
+                             ($funcname)(getfield(a, $fieldname), args...)
                      end)
     end
     return Expr(:block, fdefs...)
@@ -113,7 +113,7 @@ immutable BravaisLattice{D} <: AbstractBravaisLattice{D}
                 if M[i,i] == 0
                     momenta[i,idx] = 0
                 else
-                    tmp = sum([M[i,j] * momenta[j,idx] for j in 1:i-1])
+                    tmp = sum(Rational{Int}[M[i,j] * momenta[j,idx] for j in 1:i-1])
                     momenta[i,idx] = (ñ[i] + η[i] - tmp) // M[i,i]
                 end
             end
