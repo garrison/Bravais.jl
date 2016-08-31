@@ -1,8 +1,6 @@
 using Bravais
 using Base.Test
 
-using Compat
-
 debug = false
 
 lattice = BravaisLattice{3}([4,6,8])
@@ -122,14 +120,14 @@ for lattice in lattices
 
         # Initialize our array of each index, along with a beginning
         # phase of zero
-        indices = @compat Tuple{Int, Rational{Int}}[(z, 0//1) for z in 1:sz]
+        indices = Tuple{Int, Rational{Int}}[(z, 0//1) for z in 1:sz]
 
         # Translate as many times as we need to in each dimension
         for j in 1:d
             if M[i,j] != 0
                 ltrc = LatticeTranslationCache(lattice, j)
                 for z in 1:M[i,j]
-                    new_indices = @compat Tuple{Int, Rational{Int}}[]
+                    new_indices = Tuple{Int, Rational{Int}}[]
                     sizehint!(new_indices, sz)
                     for (s, old_η) in indices
                         newidx, wrap_η = @inferred translateη(lattice, s, j)
