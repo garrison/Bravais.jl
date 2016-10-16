@@ -75,7 +75,7 @@ immutable BravaisLattice{D} <: AbstractBravaisLattice{D}
 
         # check N
         length(N) == D || throw(ArgumentError(""))
-        all(d_i -> d_i>0, N) || throw(ArgumentError(""))
+        all(d_i > 0 for d_i in N) || throw(ArgumentError(""))
         N_tot = prod(N)
 
         # check M
@@ -84,15 +84,15 @@ immutable BravaisLattice{D} <: AbstractBravaisLattice{D}
         for i in 1:D
             M[i,i] == 0 || M[i,i] == N[i] || throw(ArgumentError(""))
             if M[i,i] != N[i]
-                all(s->(s == 0), M[i,:]) || throw(ArgumentError(""))
-                all(s->(s == 0), M[:,i]) || throw(ArgumentError(""))
+                all(s == 0 for s in M[i,:]) || throw(ArgumentError(""))
+                all(s == 0 for s in M[:,i]) || throw(ArgumentError(""))
             end
         end
 
         # check η
         length(η) == D || throw(ArgumentError(""))
-        all(η_i -> 0<=η_i<1, η) || throw(ArgumentError(""))
-        all([M[i,i] != 0 || η[i] == 0 for i in 1:D]) || throw(ArgumentError(""))
+        all(0 <= η_i < 1 for η_i in η) || throw(ArgumentError(""))
+        all(M[i,i] != 0 || η[i] == 0 for i in 1:D) || throw(ArgumentError(""))
 
         # check a and generate b
         size(a) == (D, D) || throw(ArgumentError(""))
