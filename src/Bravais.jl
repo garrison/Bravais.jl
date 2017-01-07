@@ -618,8 +618,8 @@ isbipartite(::HoneycombLattice) = true
 istripartite(::HoneycombLattice) = false
 
 function sublattice_index(::HoneycombLattice, site::Vector{Int})
-    retval = site[end]
-    @assert retval in (0,1)
+    retval = typeassert(site[end], Int)
+    @assert 0 <= retval < 2 # for bipartite lattice
     return retval
 end
 
@@ -650,8 +650,8 @@ isbipartite(::KagomeLattice) = false
 istripartite(::KagomeLattice) = true
 
 function sublattice_index(::KagomeLattice, site::Vector{Int})
-    retval = site[end]
-    @assert retval in (0,1,2)
+    retval = typeassert(site[end], Int)
+    @assert 0 <= retval < 3 # for tripartite lattice
     return retval
 end
 
