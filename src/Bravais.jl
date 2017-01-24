@@ -68,9 +68,9 @@ immutable BravaisLattice{D} <: AbstractBravaisLattice{D}
     momenta::Matrix{Rational{Int}}  # FIXME: rename x
     strides::Vector{Int}
 
-    function BravaisLattice(N::Vector{Int},
+    function BravaisLattice(N::AbstractVector{Int},
                             M::Matrix{Int}=diagm(N), # assumes pbc
-                            η::Vector{Rational{Int}}=zeros(Rational{Int}, length(N)),
+                            η::AbstractVector{Rational{Int}}=zeros(Rational{Int}, length(N)),
                             a::Matrix{Float64}=eye(length(N)))
 
         # check N
@@ -135,9 +135,9 @@ immutable LatticeWithBasis{D} <: AbstractLatticeWithBasis{D}
     basis::Matrix{Float64}
     strides::Vector{Int}
 
-    function LatticeWithBasis(N::Vector{Int},
+    function LatticeWithBasis(N::AbstractVector{Int},
                               M::Matrix{Int}=diagm(N), # assumes pbc
-                              η::Vector{Rational{Int}}=zeros(Rational{Int}, length(N)),
+                              η::AbstractVector{Rational{Int}}=zeros(Rational{Int}, length(N)),
                               a::Matrix{Float64}=eye(length(N)),
                               basis::Matrix{Float64}=zeros(length(N), 1))
         bravaislattice = BravaisLattice{D}(N, M, η, a)
@@ -200,7 +200,7 @@ function Base.getindex(lattice::AbstractLattice, index::Integer)
     return rv
 end
 
-function Base.in(site::Vector{Int}, lattice::AbstractLattice)
+function Base.in(site::AbstractVector{Int}, lattice::AbstractLattice)
     mc = maxcoords(lattice)
     length(mc) == length(site) || return false
     for i in 1:length(site)
@@ -209,11 +209,11 @@ function Base.in(site::Vector{Int}, lattice::AbstractLattice)
     return true
 end
 
-Base.findfirst(lattice::AbstractLattice, site::Vector{Int}) = site ∉ lattice ? 0 : dot(site, _strides(lattice)) + 1
+Base.findfirst(lattice::AbstractLattice, site::AbstractVector{Int}) = site ∉ lattice ? 0 : dot(site, _strides(lattice)) + 1
 
 Base.start(lattice::AbstractLattice) = zeros(Int, length(maxcoords(lattice)))
 
-function Base.done(lattice::AbstractLattice, site::Vector{Int})
+function Base.done(lattice::AbstractLattice, site::AbstractVector{Int})
     mc = maxcoords(lattice)
     @assert length(site) == length(mc)
     for i in 1:length(mc)
@@ -222,7 +222,7 @@ function Base.done(lattice::AbstractLattice, site::Vector{Int})
     return false
 end
 
-function Base.next(lattice::AbstractLattice, site::Vector{Int})
+function Base.next(lattice::AbstractLattice, site::AbstractVector{Int})
     newsite = copy(site)
     mc = maxcoords(lattice)
     # XXX FIXME @assert something # otherwise BoundsError!
@@ -294,26 +294,26 @@ function momentum{D}(lattice::BravaisLattice{D}, idx::Integer, charge::Integer)
     return x1 + offsets
 end
 
-kdotr(lattice::BravaisLattice, ksite::Vector{Rational{Int}}, site::Vector{Int}) = 2pi * dot(ksite, site)
-kdotr(lattice::BravaisLattice, kidx::Integer, site::Vector{Int}) = kdotr(lattice, momentum(lattice, kidx), site)
+kdotr(lattice::BravaisLattice, ksite::AbstractVector{Rational{Int}}, site::AbstractVector{Int}) = 2pi * dot(ksite, site)
+kdotr(lattice::BravaisLattice, kidx::Integer, site::AbstractVector{Int}) = kdotr(lattice, momentum(lattice, kidx), site)
 kdotr(lattice::BravaisLattice, k, ridx::Integer) = kdotr(lattice, k, lattice[ridx])
 
-momentumspace(lattice::BravaisLattice, k::Vector{Rational{Int}}) = lattice.b * k
+momentumspace(lattice::BravaisLattice, k::AbstractVector{Rational{Int}}) = lattice.b * k
 momentumspace(lattice::BravaisLattice, kidx::Integer) = momentumspace(lattice, momentum(lattice, kidx))
 # FIXME: make it possible to get momentum-space points translated to the first brillouin zone (momentumspace_bz)
 
-realspace(lattice::BravaisLattice, site::Vector{Int}) = lattice.a * site
+realspace(lattice::BravaisLattice, site::AbstractVector{Int}) = lattice.a * site
 # NOTE: the following function does not error out if wrap makes no sense due to OBC.
-realspace(lattice::BravaisLattice, site::Vector{Int}, wrap::Vector{Int}) = lattice.a * (site + transpose(lattice.M) * wrap)
+realspace(lattice::BravaisLattice, site::AbstractVector{Int}, wrap::AbstractVector{Int}) = lattice.a * (site + transpose(lattice.M) * wrap)
 
-function realspace(lattice::LatticeWithBasis, site::Vector{Int}, args...)
+function realspace(lattice::LatticeWithBasis, site::AbstractVector{Int}, args...)
     length(site) == length(lattice.maxcoords) || throw(ArgumentError(""))
     return realspace(bravais(lattice), site[1:end-1], args...) + lattice.basis[:, site[end]+1]
 end
 
 realspace(lattice::LatticeImplUnion, ridx::Integer, args...) = realspace(lattice, lattice[ridx], args...)
 
-function wraparound_site!{D}(lattice::LatticeImplUnion{D}, site::Vector{Int})
+function wraparound_site!{D}(lattice::LatticeImplUnion{D}, site::AbstractVector{Int})
     mc = maxcoords(lattice)
     length(site) == length(mc) || throw(ArgumentError(""))
 
@@ -353,24 +353,24 @@ function wraparound_site!{D}(lattice::LatticeImplUnion{D}, site::Vector{Int})
 
     return site, wrap
 end
-wraparound_site!(lattice::WrappedLatticeUnion, site::Vector{Int}) = wraparound_site!(lattice.lattice, site)
+wraparound_site!(lattice::WrappedLatticeUnion, site::AbstractVector{Int}) = wraparound_site!(lattice.lattice, site)
 
-wraparound_site(lattice::AbstractLattice, site::Vector{Int}) = wraparound_site!(lattice, copy(site))
+wraparound_site(lattice::AbstractLattice, site::AbstractVector{Int}) = wraparound_site!(lattice, copy(site))
 wraparound_site(lattice::AbstractLattice, index::Integer) = wraparound_site(lattice, lattice[index])
 
-function wraparound(lattice::AbstractLattice, site_or_index::Union{Vector{Int}, Integer})
+function wraparound(lattice::AbstractLattice, site_or_index::Union{AbstractVector{Int}, Integer})
     site, wrap = wraparound_site(lattice, site_or_index)
     idx = findfirst(lattice, site)
     return idx, wrap
 end
 
-function wraparoundη(lattice::AbstractLattice, site_or_index::Union{Vector{Int}, Integer})
+function wraparoundη(lattice::AbstractLattice, site_or_index::Union{AbstractVector{Int}, Integer})
     idx, wrap = wraparound(lattice, site_or_index)
     η = dot(wrap, twist(lattice))
     return idx, η
 end
 
-function translate_site!(lattice::AbstractLattice, site::Vector{Int}, direction::Integer)
+function translate_site!(lattice::AbstractLattice, site::AbstractVector{Int}, direction::Integer)
     if !isbravais(lattice) && direction > ndimensions(lattice)
         throw(ArgumentError("Cannot translate in the 'direction' of the basis index."))
     end
@@ -378,16 +378,16 @@ function translate_site!(lattice::AbstractLattice, site::Vector{Int}, direction:
     return wraparound_site!(lattice, site)
 end
 
-translate_site(lattice::AbstractLattice, site::Vector{Int}, direction::Integer) = translate_site!(lattice, copy(site), direction)
+translate_site(lattice::AbstractLattice, site::AbstractVector{Int}, direction::Integer) = translate_site!(lattice, copy(site), direction)
 translate_site(lattice::AbstractLattice, index::Integer, direction::Integer) = translate_site(lattice, lattice[index], direction)
 
-function translate(lattice::AbstractLattice, site_or_index::Union{Vector{Int}, Integer}, direction::Integer)
+function translate(lattice::AbstractLattice, site_or_index::Union{AbstractVector{Int}, Integer}, direction::Integer)
     site, wrap = translate_site(lattice, site_or_index, direction)
     idx = findfirst(lattice, site)
     return idx, wrap
 end
 
-function translateη(lattice::AbstractLattice, site_or_index::Union{Vector{Int}, Integer}, direction::Integer)
+function translateη(lattice::AbstractLattice, site_or_index::Union{AbstractVector{Int}, Integer}, direction::Integer)
     idx, wrap = translate(lattice, site_or_index, direction)
     η = dot(wrap, twist(lattice))
     return idx, η
@@ -410,7 +410,7 @@ end
 
 sublattice_index(lattice::AbstractLattice, ridx::Int) = sublattice_index(lattice, lattice[ridx])
 
-siteneighbors(f, lattice::AbstractLattice, site_or_index::Union{Vector{Int}, Integer}) = siteneighbors(f, lattice, site_or_index, 1)
+siteneighbors(f, lattice::AbstractLattice, site_or_index::Union{AbstractVector{Int}, Integer}) = siteneighbors(f, lattice, site_or_index, 1)
 
 function _siteneighbors2d(f, lattice::AbstractLattice{2}, ridx::Integer, offsets)
     M = repeater(lattice)
@@ -437,7 +437,7 @@ end
 
 #= Begin specific Bravais lattice implementations =#
 
-function _hypercubic_sublattice_index(site::Vector{Int})
+function _hypercubic_sublattice_index(site::AbstractVector{Int})
     parity = 0
     for x in site
         parity $= x
@@ -449,9 +449,9 @@ immutable HypercubicLattice{D} <: WrappedBravaisLattice{D}
     lattice::BravaisLattice{D}
     bipartite::Bool
 
-    function HypercubicLattice(N::Vector{Int},
+    function HypercubicLattice(N::AbstractVector{Int},
                                M::Matrix{Int}=diagm(N), # assumes pbc
-                               η::Vector{Rational{Int}}=zeros(Rational{Int}, length(N)))
+                               η::AbstractVector{Rational{Int}}=zeros(Rational{Int}, length(N)))
         bravaislattice = BravaisLattice{D}(N, M, η)
         bipartite = true
         for i in 1:D
@@ -475,7 +475,7 @@ end
 isbipartite(lattice::HypercubicLattice) = lattice.bipartite
 istripartite(::HypercubicLattice) = false
 
-function sublattice_index(lattice::HypercubicLattice, site::Vector{Int})
+function sublattice_index(lattice::HypercubicLattice, site::AbstractVector{Int})
     isbipartite(lattice) || throw(ArgumentError("Hypercubic lattice must be bipartite for it to have sublattice indices."))
     return _hypercubic_sublattice_index(site)
 end
@@ -548,7 +548,7 @@ function siteneighbors(f, lattice::SquareLattice, ridx::Integer, ::Type{Val{2}})
     _siteneighbors2d(f, lattice, ridx, offsets)
 end
 
-function _triangular_sublattice_index(site::Vector{Int})
+function _triangular_sublattice_index(site::AbstractVector{Int})
     @assert length(site) == 2
     # FIXME: mod is slow
     return mod(site[2] - site[1], 3)
@@ -558,9 +558,9 @@ immutable TriangularLattice <: WrappedBravaisLattice{2}
     lattice::BravaisLattice{2}
     tripartite::Bool
 
-    function TriangularLattice(N::Vector{Int},
+    function TriangularLattice(N::AbstractVector{Int},
                                M::Matrix{Int}=diagm(N), # assumes pbc
-                               η::Vector{Rational{Int}}=zeros(Rational{Int}, length(N)))
+                               η::AbstractVector{Rational{Int}}=zeros(Rational{Int}, length(N)))
         bravaislattice = BravaisLattice{2}(N, M, η, [1.0 0; 0.5 sqrt(3)/2]')
         tripartite = true
         for i in 1:2
@@ -584,7 +584,7 @@ end
 isbipartite(::TriangularLattice) = false # although "technically" it might be if it's just a chain
 istripartite(lattice::TriangularLattice) = lattice.tripartite
 
-function sublattice_index(lattice::TriangularLattice, site::Vector{Int})
+function sublattice_index(lattice::TriangularLattice, site::AbstractVector{Int})
     istripartite(lattice) || throw(ArgumentError("Triangular lattice must be tripartite for it to have sublattice indices."))
     return _triangular_sublattice_index(site)
 end
@@ -605,9 +605,9 @@ end
 immutable HoneycombLattice <: WrappedLatticeWithBasis{2}
     lattice::LatticeWithBasis{2}
 
-    function HoneycombLattice(N::Vector{Int},
+    function HoneycombLattice(N::AbstractVector{Int},
                               M::Matrix{Int}=diagm(N), # assumes pbc
-                              η::Vector{Rational{Int}}=zeros(Rational{Int}, length(N)))
+                              η::AbstractVector{Rational{Int}}=zeros(Rational{Int}, length(N)))
         a = [1.5 sqrt(3)/2; 0 sqrt(3)]'
         basis = [0 0; 1.0 0]'
         return new(LatticeWithBasis{2}(N, M, η, a, basis))
@@ -617,7 +617,7 @@ end
 isbipartite(::HoneycombLattice) = true
 istripartite(::HoneycombLattice) = false
 
-function sublattice_index(::HoneycombLattice, site::Vector{Int})
+function sublattice_index(::HoneycombLattice, site::AbstractVector{Int})
     retval = typeassert(site[end], Int)
     @assert 0 <= retval < 2 # for bipartite lattice
     return retval
@@ -637,9 +637,9 @@ end
 immutable KagomeLattice <: WrappedLatticeWithBasis{2}
     lattice::LatticeWithBasis{2}
 
-    function KagomeLattice(N::Vector{Int},
+    function KagomeLattice(N::AbstractVector{Int},
                            M::Matrix{Int}=diagm(N), # assumes pbc
-                           η::Vector{Rational{Int}}=zeros(Rational{Int}, length(N)))
+                           η::AbstractVector{Rational{Int}}=zeros(Rational{Int}, length(N)))
         a = [2 0; 1 sqrt(3)]'
         basis = [0 0; 0.5 sqrt(3)/2; 1.0 0]'
         return new(LatticeWithBasis{2}(N, M, η, a, basis))
@@ -649,7 +649,7 @@ end
 isbipartite(::KagomeLattice) = false
 istripartite(::KagomeLattice) = true
 
-function sublattice_index(::KagomeLattice, site::Vector{Int})
+function sublattice_index(::KagomeLattice, site::AbstractVector{Int})
     retval = typeassert(site[end], Int)
     @assert 0 <= retval < 3 # for tripartite lattice
     return retval
@@ -698,7 +698,7 @@ end
 LatticeTranslationCache{LatticeType<:AbstractLattice}(lattice::LatticeType, direction::Integer) = LatticeTranslationCache{LatticeType}(lattice, direction)
 
 translateη{LatticeType<:AbstractLattice}(ltrc::LatticeTranslationCache{LatticeType}, j::Integer) = ltrc.cache[j]
-translateη{LatticeType<:AbstractLattice}(ltrc::LatticeTranslationCache{LatticeType}, site::Vector{Int}) = translateη(ltrc, findfirst(ltrc.lattice, site))
+translateη{LatticeType<:AbstractLattice}(ltrc::LatticeTranslationCache{LatticeType}, site::AbstractVector{Int}) = translateη(ltrc, findfirst(ltrc.lattice, site))
 
 #= End cache objects =#
 
