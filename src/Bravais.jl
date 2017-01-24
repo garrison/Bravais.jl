@@ -69,9 +69,9 @@ immutable BravaisLattice{D} <: AbstractBravaisLattice{D}
     strides::Vector{Int}
 
     function BravaisLattice(N::AbstractVector{Int},
-                            M::Matrix{Int}=diagm(N), # assumes pbc
+                            M::AbstractMatrix{Int}=diagm(N), # assumes pbc
                             η::AbstractVector{Rational{Int}}=zeros(Rational{Int}, length(N)),
-                            a::Matrix{Float64}=eye(length(N)))
+                            a::AbstractMatrix{Float64}=eye(length(N)))
 
         # check N
         length(N) == D || throw(ArgumentError(""))
@@ -136,10 +136,10 @@ immutable LatticeWithBasis{D} <: AbstractLatticeWithBasis{D}
     strides::Vector{Int}
 
     function LatticeWithBasis(N::AbstractVector{Int},
-                              M::Matrix{Int}=diagm(N), # assumes pbc
+                              M::AbstractMatrix{Int}=diagm(N), # assumes pbc
                               η::AbstractVector{Rational{Int}}=zeros(Rational{Int}, length(N)),
-                              a::Matrix{Float64}=eye(length(N)),
-                              basis::Matrix{Float64}=zeros(length(N), 1))
+                              a::AbstractMatrix{Float64}=eye(length(N)),
+                              basis::AbstractMatrix{Float64}=zeros(length(N), 1))
         bravaislattice = BravaisLattice{D}(N, M, η, a)
 
         # check basis
@@ -450,7 +450,7 @@ immutable HypercubicLattice{D} <: WrappedBravaisLattice{D}
     bipartite::Bool
 
     function HypercubicLattice(N::AbstractVector{Int},
-                               M::Matrix{Int}=diagm(N), # assumes pbc
+                               M::AbstractMatrix{Int}=diagm(N), # assumes pbc
                                η::AbstractVector{Rational{Int}}=zeros(Rational{Int}, length(N)))
         bravaislattice = BravaisLattice{D}(N, M, η)
         bipartite = true
@@ -559,7 +559,7 @@ immutable TriangularLattice <: WrappedBravaisLattice{2}
     tripartite::Bool
 
     function TriangularLattice(N::AbstractVector{Int},
-                               M::Matrix{Int}=diagm(N), # assumes pbc
+                               M::AbstractMatrix{Int}=diagm(N), # assumes pbc
                                η::AbstractVector{Rational{Int}}=zeros(Rational{Int}, length(N)))
         bravaislattice = BravaisLattice{2}(N, M, η, [1.0 0; 0.5 sqrt(3)/2]')
         tripartite = true
@@ -606,7 +606,7 @@ immutable HoneycombLattice <: WrappedLatticeWithBasis{2}
     lattice::LatticeWithBasis{2}
 
     function HoneycombLattice(N::AbstractVector{Int},
-                              M::Matrix{Int}=diagm(N), # assumes pbc
+                              M::AbstractMatrix{Int}=diagm(N), # assumes pbc
                               η::AbstractVector{Rational{Int}}=zeros(Rational{Int}, length(N)))
         a = [1.5 sqrt(3)/2; 0 sqrt(3)]'
         basis = [0 0; 1.0 0]'
@@ -638,7 +638,7 @@ immutable KagomeLattice <: WrappedLatticeWithBasis{2}
     lattice::LatticeWithBasis{2}
 
     function KagomeLattice(N::AbstractVector{Int},
-                           M::Matrix{Int}=diagm(N), # assumes pbc
+                           M::AbstractMatrix{Int}=diagm(N), # assumes pbc
                            η::AbstractVector{Rational{Int}}=zeros(Rational{Int}, length(N)))
         a = [2 0; 1 sqrt(3)]'
         basis = [0 0; 0.5 sqrt(3)/2; 1.0 0]'
