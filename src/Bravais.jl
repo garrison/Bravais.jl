@@ -596,7 +596,7 @@ function siteneighbors(f, lattice::TriangularLattice, ridx::Integer, ::Type{Val{
     _siteneighbors2d(f, lattice, ridx, offsets)
 end
 
-@delegate WrappedBravaisLattice.lattice [ Base.length, dimensions, ndimensions, twist, repeater, primvecs, recivecs, momentum, kdotr, momentumspace, realspace ]
+@delegate WrappedBravaisLattice.lattice [ Base.length, dimensions, ndimensions, primvecs, recivecs, momentum, kdotr, momentumspace, realspace ]
 
 #= End specific Bravais lattice implementations =#
 
