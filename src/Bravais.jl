@@ -395,13 +395,13 @@ function translateη(lattice::AbstractLattice, site_or_index::Union{AbstractVect
     return idx, η
 end
 
-function neighbors(f, lattice::AbstractLattice, neigh=Val{1}) # FIXME: ; double_count=false)
+function neighbors(f, lattice::AbstractLattice, neigh=Val{1})
     for ridx in 1:length(lattice)
         siteneighbors(f, lattice, ridx, neigh)
     end
 end
 
-function neighborsη(f, lattice::AbstractLattice, neigh=Val{1}) # FIXME: ; double_count=false)
+function neighborsη(f, lattice::AbstractLattice, neigh=Val{1})
     neighbors(lattice, neigh) do idx1, idx2, wrap
         η = dot(wrap, twist(lattice))
         f(idx1, idx2, η)
@@ -499,7 +499,7 @@ end
 # primitive vectors so we can have a weird helical lattice.  how are
 # we going to support this??
 
-function siteneighbors(f, lattice::ChainLattice, ridx::Integer, ::Type{Val{1}}) # FIXME: ; double_count=false)
+function siteneighbors(f, lattice::ChainLattice, ridx::Integer, ::Type{Val{1}})
     M = lattice.lattice.M
     mc = maxcoords(lattice)
     site = lattice[ridx]
@@ -513,7 +513,7 @@ function siteneighbors(f, lattice::ChainLattice, ridx::Integer, ::Type{Val{1}}) 
     nothing
 end
 
-function siteneighbors{N}(f, lattice::ChainLattice, ridx::Integer, ::Type{Val{N}}) # FIXME: ; double_count=false)
+function siteneighbors{N}(f, lattice::ChainLattice, ridx::Integer, ::Type{Val{N}})
     M = lattice.lattice.M
     mc = maxcoords(lattice)
     site = lattice[ridx]
@@ -527,7 +527,7 @@ function siteneighbors{N}(f, lattice::ChainLattice, ridx::Integer, ::Type{Val{N}
     nothing
 end
 
-function siteneighbors{D}(f, lattice::HypercubicLattice{D}, ridx::Integer, ::Type{Val{1}}) # FIXME: ; double_count=false)
+function siteneighbors{D}(f, lattice::HypercubicLattice{D}, ridx::Integer, ::Type{Val{1}})
     M = lattice.lattice.M
     mc = maxcoords(lattice)
 
@@ -545,7 +545,7 @@ function siteneighbors{D}(f, lattice::HypercubicLattice{D}, ridx::Integer, ::Typ
     end
 end
 
-function siteneighbors(f, lattice::SquareLattice, ridx::Integer, ::Type{Val{2}}) # FIXME: ; double_count=false)
+function siteneighbors(f, lattice::SquareLattice, ridx::Integer, ::Type{Val{2}})
     offsets = ([1,1], [-1,1])
     _siteneighbors2d(f, lattice, ridx, offsets)
 end
@@ -593,7 +593,7 @@ end
 
 # FIXME: many of these neighbor functions can use special handling when the lattice height or width is 1 in a direction.  or we could just forbid this.
 
-function siteneighbors(f, lattice::TriangularLattice, ridx::Integer, ::Type{Val{1}}) # FIXME: ; double_count=false)
+function siteneighbors(f, lattice::TriangularLattice, ridx::Integer, ::Type{Val{1}})
     offsets = ([1,0], [0,1], [-1,1])
     _siteneighbors2d(f, lattice, ridx, offsets)
 end
@@ -625,7 +625,7 @@ function sublattice_index(::HoneycombLattice, site::AbstractVector{Int})
     return retval
 end
 
-function siteneighbors(f, lattice::HoneycombLattice, ridx::Integer, ::Type{Val{1}}) #; double_count=false)
+function siteneighbors(f, lattice::HoneycombLattice, ridx::Integer, ::Type{Val{1}})
     site = lattice[ridx]
     if site[end] == 0
         offsets = ([0, 0, 1], [-1, 0, 1], [-1, 1, 1])
@@ -657,7 +657,7 @@ function sublattice_index(::KagomeLattice, site::AbstractVector{Int})
     return retval
 end
 
-function siteneighbors(f, lattice::KagomeLattice, ridx::Integer, ::Type{Val{1}}) #; double_count=false)
+function siteneighbors(f, lattice::KagomeLattice, ridx::Integer, ::Type{Val{1}})
     site = lattice[ridx]
     if site[end] == 0
         offsets = ([0, 0, 1], [0, -1, 1])
