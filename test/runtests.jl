@@ -1,6 +1,8 @@
 using Bravais
 using Base.Test
 
+using Compat
+
 debug = false
 
 lattice = BravaisLattice{3}([4,6,8])
@@ -162,23 +164,23 @@ for lattice in lattices
                     exp2 = exp(im * @inferred(kdotr(lattice, k_idx, site2)))
                     idx, η_wrap = @inferred wraparoundη(lattice, site2)
                     exp3 = exp(im * (kdotr(lattice, k_idx, idx) + 2π * η_wrap))
-                    @test_approx_eq exp1 exp2
-                    @test_approx_eq exp1 exp3
+                    @test @compat exp1 ≈ exp2
+                    @test @compat exp1 ≈ exp3
                     for charge in (1, 3)
                         k_total = @inferred momentum(lattice, k_idx, charge)
                         exp1 = exp(im * (kdotr(lattice, k_total, site) + 2π * η[i] * charge))
                         exp2 = exp(im * kdotr(lattice, k_total, site2))
                         exp3 = exp(im * (kdotr(lattice, k_total, idx) + 2π * η_wrap * charge))
-                        @test_approx_eq exp1 exp2
-                        @test_approx_eq exp1 exp3
+                        @test @compat exp1 ≈ exp2
+                        @test @compat exp1 ≈ exp3
                     end
                     k = @inferred momentumspace(lattice, k_idx)
                     exp1 = exp(im * (dot(k, realspace(lattice, site)) + 2π * η[i]))
                     exp2 = exp(im * dot(k, realspace(lattice, site2)))
                     site3, wrap = @inferred wraparound_site(lattice, site2)
                     exp3 = exp(im * (dot(k, realspace(lattice, site3)) + 2π * dot(wrap, twist(lattice))))
-                    @test_approx_eq exp1 exp2
-                    @test_approx_eq exp1 exp3
+                    @test @compat exp1 ≈ exp2
+                    @test @compat exp1 ≈ exp3
                 end
             end
         end
@@ -465,7 +467,7 @@ lattice = HoneycombLattice([5,5])
 @test !istripartite(lattice)
 test_neighbor_sublattices(lattice, [0,1])
 for (i, site) in enumerate(lattice)
-    @test sublattice_index(lattice, i) == sublattice_index(lattice, site) == site[end] == ((i $ 1) & 1)
+    @test sublattice_index(lattice, i) == sublattice_index(lattice, site) == site[end] == ((i ⊻ 1) & 1)
 end
 
 lattice = KagomeLattice([4,3])

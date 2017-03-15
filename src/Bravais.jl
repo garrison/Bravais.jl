@@ -24,6 +24,8 @@ __precompile__()
 
 module Bravais
 
+using Compat
+
 # This macro was originally written by JMW for DataStructures.jl.
 # It has been modified for use here.
 macro delegate(source, targets)
@@ -101,7 +103,7 @@ immutable BravaisLattice{D} <: AbstractBravaisLattice{D}
         # generate allowed momenta
         momenta_range = [s != 0 ? s : 1 for s in diag(M)]
         nmomenta = prod(momenta_range)
-        momenta = Array(Rational{Int}, D, nmomenta)
+        momenta = Array{Rational{Int}}(D, nmomenta)
         for idx in 1:nmomenta
             # FIXME: getting idx should be easier, once
             # multidimensional iteration is supported
@@ -172,8 +174,8 @@ bravais(lattice::AbstractBravaisLattice) = lattice
 bravais(lattice::LatticeWithBasis) = lattice.bravaislattice
 bravais(lattice::WrappedLatticeWithBasis) = bravais(lattice.lattice)
 
-typealias LatticeImplUnion{D} Union{BravaisLattice{D}, LatticeWithBasis{D}}
-typealias WrappedLatticeUnion{D} Union{WrappedBravaisLattice{D}, WrappedLatticeWithBasis{D}}
+@compat const LatticeImplUnion{D} = Union{BravaisLattice{D}, LatticeWithBasis{D}}
+@compat const WrappedLatticeUnion{D} = Union{WrappedBravaisLattice{D}, WrappedLatticeWithBasis{D}}
 
 _strides(lattice::LatticeImplUnion) = lattice.strides
 _strides(lattice::WrappedLatticeUnion) = _strides(lattice.lattice)
@@ -190,7 +192,7 @@ function Base.getindex(lattice::AbstractLattice, index::Integer)
     checkbounds(lattice, index)
     # Alternatively: return [rowmajor_ind2sub(tuple(maxcoords(lattice)...), index)...] - 1
     strides = _strides(lattice)
-    rv = Array(Int, length(strides))
+    rv = Array{Int}(length(strides))
     r = index - 1
     for i in 1:length(strides)-1
         d, r = divrem(r, strides[i])
@@ -440,7 +442,7 @@ end
 function _hypercubic_sublattice_index(site::AbstractVector{Int})
     parity = 0
     for x in site
-        parity $= x
+        parity = parity ⊻ x
     end
     return parity & 1
 end
@@ -480,9 +482,9 @@ function sublattice_index(lattice::HypercubicLattice, site::AbstractVector{Int})
     return _hypercubic_sublattice_index(site)
 end
 
-typealias ChainLattice HypercubicLattice{1}
-typealias SquareLattice HypercubicLattice{2}
-typealias CubicLattice HypercubicLattice{3}
+@compat const ChainLattice = HypercubicLattice{1}
+@compat const SquareLattice = HypercubicLattice{2}
+@compat const CubicLattice = HypercubicLattice{3}
 
 # FIXME: do the wrapping etc in a common function for all lattice
 # types.  then the siteneighbors function (or `siteneighbordsimpl`)
