@@ -51,14 +51,14 @@ end
 # https://github.com/JuliaLang/julia/issues/8188#issuecomment-56763806).
 rowmajor_ind2sub(dims, index) = reverse(ind2sub(reverse(dims), index))
 
-abstract AbstractSiteNetwork <: AbstractVector{Vector{Int}}
-abstract AbstractLattice{D} <: AbstractSiteNetwork
+@compat abstract type AbstractSiteNetwork <: AbstractVector{Vector{Int}} end
+@compat abstract type AbstractLattice{D} <: AbstractSiteNetwork end
 
-abstract AbstractBravaisLattice{D} <: AbstractLattice{D}
-abstract AbstractLatticeWithBasis{D} <: AbstractLattice{D}
+@compat abstract type AbstractBravaisLattice{D} <: AbstractLattice{D} end
+@compat abstract type AbstractLatticeWithBasis{D} <: AbstractLattice{D} end
 
-abstract WrappedBravaisLattice{D} <: AbstractBravaisLattice{D}
-abstract WrappedLatticeWithBasis{D} <: AbstractLatticeWithBasis{D}
+@compat abstract type WrappedBravaisLattice{D} <: AbstractBravaisLattice{D} end
+@compat abstract type WrappedLatticeWithBasis{D} <: AbstractLatticeWithBasis{D} end
 
 immutable BravaisLattice{D} <: AbstractBravaisLattice{D}
     N_tot::Int  # total number of sites
