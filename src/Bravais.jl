@@ -70,10 +70,10 @@ immutable BravaisLattice{D} <: AbstractBravaisLattice{D}
     momenta::Matrix{Rational{Int}}  # FIXME: rename x
     strides::Vector{Int}
 
-    function BravaisLattice(N::AbstractVector{Int},
-                            M::AbstractMatrix{Int}=diagm(N), # assumes pbc
-                            η::AbstractVector{Rational{Int}}=zeros(Rational{Int}, length(N)),
-                            a::AbstractMatrix{Float64}=eye(length(N)))
+    function (::Type{BravaisLattice{D}}){D}(N::AbstractVector{Int},
+                                            M::AbstractMatrix{Int}=diagm(N), # assumes pbc
+                                            η::AbstractVector{Rational{Int}}=zeros(Rational{Int}, length(N)),
+                                            a::AbstractMatrix{Float64}=eye(length(N)))
 
         # check N
         length(N) == D || throw(ArgumentError(""))
@@ -126,7 +126,7 @@ immutable BravaisLattice{D} <: AbstractBravaisLattice{D}
             s *= N[i]
         end
 
-        new(N_tot, copy(N), copy(M), copy(η), copy(a), b, momenta, strides)
+        new{D}(N_tot, copy(N), copy(M), copy(η), copy(a), b, momenta, strides)
     end
 end
 
@@ -137,11 +137,11 @@ immutable LatticeWithBasis{D} <: AbstractLatticeWithBasis{D}
     basis::Matrix{Float64}
     strides::Vector{Int}
 
-    function LatticeWithBasis(N::AbstractVector{Int},
-                              M::AbstractMatrix{Int}=diagm(N), # assumes pbc
-                              η::AbstractVector{Rational{Int}}=zeros(Rational{Int}, length(N)),
-                              a::AbstractMatrix{Float64}=eye(length(N)),
-                              basis::AbstractMatrix{Float64}=zeros(length(N), 1))
+    function (::Type{LatticeWithBasis{D}}){D}(N::AbstractVector{Int},
+                                              M::AbstractMatrix{Int}=diagm(N), # assumes pbc
+                                              η::AbstractVector{Rational{Int}}=zeros(Rational{Int}, length(N)),
+                                              a::AbstractMatrix{Float64}=eye(length(N)),
+                                              basis::AbstractMatrix{Float64}=zeros(length(N), 1))
         bravaislattice = BravaisLattice{D}(N, M, η, a)
 
         # check basis
@@ -162,7 +162,7 @@ immutable LatticeWithBasis{D} <: AbstractLatticeWithBasis{D}
             s *= N[i]
         end
 
-        new(N_tot, maxcoords, bravaislattice, copy(basis), strides)
+        new{D}(N_tot, maxcoords, bravaislattice, copy(basis), strides)
     end
 end
 
@@ -451,9 +451,9 @@ immutable HypercubicLattice{D} <: WrappedBravaisLattice{D}
     lattice::BravaisLattice{D}
     bipartite::Bool
 
-    function HypercubicLattice(N::AbstractVector{Int},
-                               M::AbstractMatrix{Int}=diagm(N), # assumes pbc
-                               η::AbstractVector{Rational{Int}}=zeros(Rational{Int}, length(N)))
+    function (::Type{HypercubicLattice{D}}){D}(N::AbstractVector{Int},
+                                               M::AbstractMatrix{Int}=diagm(N), # assumes pbc
+                                               η::AbstractVector{Rational{Int}}=zeros(Rational{Int}, length(N)))
         bravaislattice = BravaisLattice{D}(N, M, η)
         bipartite = true
         for i in 1:D
@@ -470,7 +470,7 @@ immutable HypercubicLattice{D} <: WrappedBravaisLattice{D}
                 end
             end
         end
-        new(bravaislattice, bipartite)
+        new{D}(bravaislattice, bipartite)
     end
 end
 
@@ -687,13 +687,13 @@ immutable LatticeTranslationCache{LatticeType<:AbstractLattice}
     direction::Int
     cache::Vector{Tuple{Int,Rational{Int}}}
 
-    function LatticeTranslationCache(lattice, direction)
+    function (::Type{LatticeTranslationCache{LatticeType}}){LatticeType}(lattice, direction)
         cache = Tuple{Int,Rational{Int}}[]
         sizehint!(cache, length(lattice))
         for i in 1:length(lattice)
             push!(cache, translateη(lattice, i, direction))
         end
-        new(lattice, Int(direction), cache)
+        new{LatticeType}(lattice, Int(direction), cache)
     end
 end
 
