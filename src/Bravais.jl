@@ -631,7 +631,8 @@ function siteneighbors(f, lattice::HoneycombLattice, ridx::Integer, ::Type{Val{1
         offsets = ([0, 0, 1], [-1, 0, 1], [-1, 1, 1])
     else
         @assert site[end] == 1
-        offsets = ([0, 0, -1], [1, 0, -1], [1, -1, -1])
+        offsets = () # otherwise we are double counting!
+        #offsets = ([0, 0, -1], [1, 0, -1], [1, -1, -1])
     end
     _siteneighbors2d(f, lattice, ridx, offsets)
 end
