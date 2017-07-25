@@ -1,7 +1,6 @@
 using Bravais
 using Base.Test
 
-using Compat
 import StaticArrays
 
 debug = false
@@ -167,23 +166,23 @@ for lattice in lattices
                     exp2 = exp(im * @inferred(kdotr(lattice, k_idx, site2)))
                     idx, η_wrap = @inferred wraparoundη(lattice, site2)
                     exp3 = exp(im * (kdotr(lattice, k_idx, idx) + 2π * η_wrap))
-                    @test @compat exp1 ≈ exp2
-                    @test @compat exp1 ≈ exp3
+                    @test exp1 ≈ exp2
+                    @test exp1 ≈ exp3
                     for charge in (1, 3)
                         k_total = @inferred momentum(lattice, k_idx, charge)
                         exp1 = exp(im * (kdotr(lattice, k_total, site) + 2π * η[i] * charge))
                         exp2 = exp(im * kdotr(lattice, k_total, site2))
                         exp3 = exp(im * (kdotr(lattice, k_total, idx) + 2π * η_wrap * charge))
-                        @test @compat exp1 ≈ exp2
-                        @test @compat exp1 ≈ exp3
+                        @test exp1 ≈ exp2
+                        @test exp1 ≈ exp3
                     end
                     k = @inferred momentumspace(lattice, k_idx)
                     exp1 = exp(im * (dot(k, realspace(lattice, site)) + 2π * η[i]))
                     exp2 = exp(im * dot(k, realspace(lattice, site2)))
                     site3, wrap = @inferred wraparound_site(lattice, site2)
                     exp3 = exp(im * (dot(k, realspace(lattice, site3)) + 2π * dot(wrap, twist(lattice))))
-                    @test @compat exp1 ≈ exp2
-                    @test @compat exp1 ≈ exp3
+                    @test exp1 ≈ exp2
+                    @test exp1 ≈ exp3
                 end
             end
         end
@@ -485,7 +484,7 @@ function test_neighbor_distances(lattice, neigh=Val{1}, expected_squared=1)
     neighbors(lattice, neigh) do i, j, wrap
         diff = realspace(lattice, i) - realspace(lattice, j)
         dist_squared = dot(diff, diff)
-        @test_approx_eq_eps expected_squared dist_squared 1e-8
+        @test expected_squared ≈ dist_squared atol=1e-8
     end
 end
 

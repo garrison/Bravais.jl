@@ -17,7 +17,6 @@ __precompile__()
 
 module Bravais
 
-using Compat
 using StaticArrays
 
 # This macro was originally written by JMW for DataStructures.jl.
@@ -45,14 +44,14 @@ end
 # https://github.com/JuliaLang/julia/issues/8188#issuecomment-56763806).
 rowmajor_ind2sub(dims, index) = reverse(ind2sub(reverse(dims), index))
 
-@compat abstract type AbstractSiteNetwork <: AbstractVector{Vector{Int}} end
-@compat abstract type AbstractLattice{D} <: AbstractSiteNetwork end
+abstract type AbstractSiteNetwork <: AbstractVector{Vector{Int}} end
+abstract type AbstractLattice{D} <: AbstractSiteNetwork end
 
-@compat abstract type AbstractBravaisLattice{D} <: AbstractLattice{D} end
-@compat abstract type AbstractLatticeWithBasis{D,Dp1} <: AbstractLattice{D} end
+abstract type AbstractBravaisLattice{D} <: AbstractLattice{D} end
+abstract type AbstractLatticeWithBasis{D,Dp1} <: AbstractLattice{D} end
 
-@compat abstract type WrappedBravaisLattice{D} <: AbstractBravaisLattice{D} end
-@compat abstract type WrappedLatticeWithBasis{D,Dp1} <: AbstractLatticeWithBasis{D,Dp1} end
+abstract type WrappedBravaisLattice{D} <: AbstractBravaisLattice{D} end
+abstract type WrappedLatticeWithBasis{D,Dp1} <: AbstractLatticeWithBasis{D,Dp1} end
 
 # NOTE: In the following, D is the number of dimensions, Dsq == D^2,
 # and Dp1 == D+1.
@@ -184,8 +183,8 @@ bravais(lattice::AbstractBravaisLattice) = lattice
 bravais(lattice::LatticeWithBasis) = lattice.bravaislattice
 bravais(lattice::WrappedLatticeWithBasis) = bravais(lattice.lattice)
 
-@compat const LatticeImplUnion{D,Dsq} = Union{BravaisLattice{D,Dsq}, LatticeWithBasis{D,Dsq}}
-@compat const WrappedLatticeUnion{D} = Union{WrappedBravaisLattice{D}, WrappedLatticeWithBasis{D}}
+const LatticeImplUnion{D,Dsq} = Union{BravaisLattice{D,Dsq}, LatticeWithBasis{D,Dsq}}
+const WrappedLatticeUnion{D} = Union{WrappedBravaisLattice{D}, WrappedLatticeWithBasis{D}}
 
 _strides(lattice::LatticeImplUnion) = lattice.strides
 _strides(lattice::WrappedLatticeUnion) = _strides(lattice.lattice)
@@ -512,9 +511,9 @@ function sublattice_index(lattice::HypercubicLattice, site::AbstractVector{Int})
     return _hypercubic_sublattice_index(site)
 end
 
-@compat const ChainLattice = HypercubicLattice{1,1}
-@compat const SquareLattice = HypercubicLattice{2,4}
-@compat const CubicLattice = HypercubicLattice{3,9}
+const ChainLattice = HypercubicLattice{1,1}
+const SquareLattice = HypercubicLattice{2,4}
+const CubicLattice = HypercubicLattice{3,9}
 
 # FIXME: do the wrapping etc in a common function for all lattice
 # types.  then the siteneighbors function (or `siteneighbordsimpl`)
