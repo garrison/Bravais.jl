@@ -56,7 +56,7 @@ abstract type WrappedLatticeWithBasis{D,Dp1} <: AbstractLatticeWithBasis{D,Dp1} 
 # NOTE: In the following, D is the number of dimensions, Dsq == D^2,
 # and Dp1 == D+1.
 
-immutable BravaisLattice{D,Dsq} <: AbstractBravaisLattice{D}
+struct BravaisLattice{D,Dsq} <: AbstractBravaisLattice{D}
     N_tot::Int  # total number of sites
     N::SVector{D,Int}  # lattice extent in each dimension
     M::SMatrix{D,D,Int,Dsq}  # "M" matrix (will be diagonal for non-helical boundary)
@@ -139,7 +139,7 @@ function (::Type{BravaisLattice}){D}(N::StaticVector{D,Int}, args...)
     BravaisLattice{D}(N, args...)
 end
 
-immutable LatticeWithBasis{D,Dsq,Dp1} <: AbstractLatticeWithBasis{D,Dp1}
+struct LatticeWithBasis{D,Dsq,Dp1} <: AbstractLatticeWithBasis{D,Dp1}
     N_tot::Int
     maxcoords::SVector{Dp1,Int}
     bravaislattice::BravaisLattice{D,Dsq}
@@ -468,7 +468,7 @@ function _hypercubic_sublattice_index(site::AbstractVector{Int})
     return parity & 1
 end
 
-immutable HypercubicLattice{D,Dsq} <: WrappedBravaisLattice{D}
+struct HypercubicLattice{D,Dsq} <: WrappedBravaisLattice{D}
     lattice::BravaisLattice{D,Dsq}
     bipartite::Bool
 
@@ -585,7 +585,7 @@ function _triangular_sublattice_index(site::AbstractVector{Int})
     return mod(site[2] - site[1], 3)
 end
 
-immutable TriangularLattice <: WrappedBravaisLattice{2}
+struct TriangularLattice <: WrappedBravaisLattice{2}
     lattice::BravaisLattice{2,4}
     tripartite::Bool
 
@@ -633,7 +633,7 @@ end
 
 #= Begin specific lattice w/ basis implementations =#
 
-immutable HoneycombLattice <: WrappedLatticeWithBasis{2,3}
+struct HoneycombLattice <: WrappedLatticeWithBasis{2,3}
     lattice::LatticeWithBasis{2,4,3}
 
     function HoneycombLattice(N::AbstractVector{Int},
@@ -666,7 +666,7 @@ function siteneighbors(f, lattice::HoneycombLattice, ridx::Integer, ::Type{Val{1
     _siteneighbors2d(f, lattice, ridx, offsets)
 end
 
-immutable KagomeLattice <: WrappedLatticeWithBasis{2,3}
+struct KagomeLattice <: WrappedLatticeWithBasis{2,3}
     lattice::LatticeWithBasis{2,4,3}
 
     function KagomeLattice(N::AbstractVector{Int},
@@ -712,7 +712,7 @@ Precomputes the results of the translateη function on each site.
 ltrc = LatticeTranslationCache(lattice, direction)
 translateη(ltrc, site)
 """ ->
-immutable LatticeTranslationCache{LatticeType<:AbstractLattice}
+struct LatticeTranslationCache{LatticeType<:AbstractLattice}
     lattice::LatticeType
     direction::Int
     cache::Vector{Tuple{Int,Rational{Int}}}
