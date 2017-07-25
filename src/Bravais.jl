@@ -4,13 +4,6 @@
 # NOTE: Most symbols used below are defined in the accompanying
 # documentation.
 
-# FIXME: perhaps change to use tuples, not arrays.  they are ordered,
-# but they are also immutable (which might be bad for some things, but
-# we can always convert to array and back.)  Or we could just use
-# statically-sized arrays eventually (which would require templating
-# on d), which seems more appropriate.  Then anyone who wants to order
-# on them must convert to a tuple, but this is fine..
-
 # FIXME: need other constructors for e.g. OBC
 
 # FIXME: have a way of getting the neighbors of a given site (instead
@@ -25,6 +18,7 @@ __precompile__()
 module Bravais
 
 using Compat
+using StaticArrays
 
 # This macro was originally written by JMW for DataStructures.jl.
 # It has been modified for use here.
@@ -55,25 +49,29 @@ rowmajor_ind2sub(dims, index) = reverse(ind2sub(reverse(dims), index))
 @compat abstract type AbstractLattice{D} <: AbstractSiteNetwork end
 
 @compat abstract type AbstractBravaisLattice{D} <: AbstractLattice{D} end
-@compat abstract type AbstractLatticeWithBasis{D} <: AbstractLattice{D} end
+@compat abstract type AbstractLatticeWithBasis{D,Dp1} <: AbstractLattice{D} end
 
 @compat abstract type WrappedBravaisLattice{D} <: AbstractBravaisLattice{D} end
-@compat abstract type WrappedLatticeWithBasis{D} <: AbstractLatticeWithBasis{D} end
+@compat abstract type WrappedLatticeWithBasis{D,Dp1} <: AbstractLatticeWithBasis{D,Dp1} end
 
-immutable BravaisLattice{D} <: AbstractBravaisLattice{D}
+# NOTE: In the following, D is the number of dimensions, Dsq == D^2,
+# and Dp1 == D+1.
+
+immutable BravaisLattice{D,Dsq} <: AbstractBravaisLattice{D}
     N_tot::Int  # total number of sites
-    N::Vector{Int}  # lattice extent in each dimension
-    M::Matrix{Int}  # "M" matrix (will be diagonal for non-helical boundary)
-    η::Vector{Rational{Int}}  # twist in each direction (rational multiple of 2π)
-    a::Matrix{Float64}  # primitive lattice vectors
-    b::Matrix{Float64}  # reciprocal lattice vectors
-    momenta::Matrix{Rational{Int}}  # FIXME: rename x
-    strides::Vector{Int}
+    N::SVector{D,Int}  # lattice extent in each dimension
+    M::SMatrix{D,D,Int,Dsq}  # "M" matrix (will be diagonal for non-helical boundary)
+    η::SVector{D,Rational{Int}}  # twist in each direction (rational multiple of 2π)
+    a::SMatrix{D,D,Float64,Dsq}  # primitive lattice vectors
+    b::SMatrix{D,D,Float64,Dsq}  # reciprocal lattice vectors
+    momenta::Vector{SVector{D,Rational{Int}}}
+    strides::SVector{D,Int}
 
-    function (::Type{BravaisLattice{D}}){D}(N::AbstractVector{Int},
-                                            M::AbstractMatrix{Int}=diagm(N), # assumes pbc
-                                            η::AbstractVector{Rational{Int}}=zeros(Rational{Int}, length(N)),
-                                            a::AbstractMatrix{Float64}=eye(length(N)))
+    function (::Type{BravaisLattice{D,Dsq}}){D,Dsq}(N::AbstractVector{Int},
+                                                    M::AbstractMatrix{Int}=diagm(N), # assumes pbc
+                                                    η::AbstractVector{Rational{Int}}=zeros(SVector{D,Rational{Int}}),
+                                                    a::AbstractMatrix{Float64}=eye(SMatrix{D,D}))
+        @assert Dsq == D * D
 
         # check N
         length(N) == D || throw(ArgumentError(""))
@@ -103,19 +101,21 @@ immutable BravaisLattice{D} <: AbstractBravaisLattice{D}
         # generate allowed momenta
         momenta_range = [s != 0 ? s : 1 for s in diag(M)]
         nmomenta = prod(momenta_range)
-        momenta = Array{Rational{Int}}(D, nmomenta)
+        momenta = sizehint!(SVector{D,Rational{Int}}[], nmomenta)
+        momentum = zeros(MVector{D,Rational{Int}})
         for idx in 1:nmomenta
             # FIXME: getting idx should be easier, once
             # multidimensional iteration is supported
             ñ = [rowmajor_ind2sub(tuple(momenta_range...), idx)...] - 1
             for i in 1:D
                 if M[i,i] == 0
-                    momenta[i,idx] = 0
+                    momentum[i] = 0
                 else
-                    tmp = sum(Rational{Int}[M[i,j] * momenta[j,idx] for j in 1:i-1])
-                    momenta[i,idx] = (ñ[i] + η[i] - tmp) // M[i,i]
+                    tmp = sum(Rational{Int}[M[i,j] * momentum[j] for j in 1:i-1])
+                    momentum[i] = (ñ[i] + η[i] - tmp) // M[i,i]
                 end
             end
+            push!(momenta, momentum)
         end
 
         # calculate strides
@@ -126,28 +126,39 @@ immutable BravaisLattice{D} <: AbstractBravaisLattice{D}
             s *= N[i]
         end
 
-        new{D}(N_tot, copy(N), copy(M), copy(η), copy(a), b, momenta, strides)
+        new{D,Dsq}(N_tot, copy(N), copy(M), copy(η), copy(a), b, momenta, strides)
     end
 end
 
-immutable LatticeWithBasis{D} <: AbstractLatticeWithBasis{D}
-    N_tot::Int
-    maxcoords::Vector{Int}
-    bravaislattice::BravaisLattice{D}
-    basis::Matrix{Float64}
-    strides::Vector{Int}
+Base.@pure square(x) = x * x
 
-    function (::Type{LatticeWithBasis{D}}){D}(N::AbstractVector{Int},
-                                              M::AbstractMatrix{Int}=diagm(N), # assumes pbc
-                                              η::AbstractVector{Rational{Int}}=zeros(Rational{Int}, length(N)),
-                                              a::AbstractMatrix{Float64}=eye(length(N)),
-                                              basis::AbstractMatrix{Float64}=zeros(length(N), 1))
-        bravaislattice = BravaisLattice{D}(N, M, η, a)
+function (::Type{BravaisLattice{D}}){D}(args...)
+    BravaisLattice{D,square(D)}(args...)
+end
+
+function (::Type{BravaisLattice}){D}(N::StaticVector{D,Int}, args...)
+    BravaisLattice{D}(N, args...)
+end
+
+immutable LatticeWithBasis{D,Dsq,Dp1} <: AbstractLatticeWithBasis{D,Dp1}
+    N_tot::Int
+    maxcoords::SVector{Dp1,Int}
+    bravaislattice::BravaisLattice{D,Dsq}
+    basis::Matrix{Float64} # ZZZ XXX could be vector of SVector's but then we would need to modify how it is passed/used
+    strides::SVector{Dp1,Int}
+
+    function (::Type{LatticeWithBasis{D,Dsq,Dp1}}){D,Dsq,Dp1}(N::AbstractVector{Int},
+                                                              M::AbstractMatrix{Int}=diagm(N), # assumes pbc
+                                                              η::AbstractVector{Rational{Int}}=zeros(SVector{D,Rational{Int}}),
+                                                              a::AbstractMatrix{Float64}=eye(SMatrix{D,D}),
+                                                              basis::AbstractMatrix{Float64}=zeros(D, 1))
+        @assert Dp1 == D + 1
+        bravaislattice = BravaisLattice{D,Dsq}(N, M, η, a)
 
         # check basis
-        nbasis = size(basis)[2]
+        nbasis = size(basis, 2)
         nbasis > 0 || throw(ArgumentError(""))
-        size(basis)[1] == length(N) || throw(ArgumentError(""))
+        size(basis, 1) == D || throw(ArgumentError(""))
 
         # determine N_tot and maxcoords, now that we know the basis size
         N_tot = prod(N) * nbasis
@@ -157,12 +168,12 @@ immutable LatticeWithBasis{D} <: AbstractLatticeWithBasis{D}
         strides = zeros(Int, length(maxcoords))
         strides[end] = 1
         s = nbasis
-        for i in length(N):-1:1
+        for i in D:-1:1
             strides[i] = s
             s *= N[i]
         end
 
-        new{D}(N_tot, maxcoords, bravaislattice, copy(basis), strides)
+        new{D,Dsq,Dp1}(N_tot, maxcoords, bravaislattice, copy(basis), strides)
     end
 end
 
@@ -174,7 +185,7 @@ bravais(lattice::AbstractBravaisLattice) = lattice
 bravais(lattice::LatticeWithBasis) = lattice.bravaislattice
 bravais(lattice::WrappedLatticeWithBasis) = bravais(lattice.lattice)
 
-@compat const LatticeImplUnion{D} = Union{BravaisLattice{D}, LatticeWithBasis{D}}
+@compat const LatticeImplUnion{D,Dsq} = Union{BravaisLattice{D,Dsq}, LatticeWithBasis{D,Dsq}}
 @compat const WrappedLatticeUnion{D} = Union{WrappedBravaisLattice{D}, WrappedLatticeWithBasis{D}}
 
 _strides(lattice::LatticeImplUnion) = lattice.strides
@@ -269,14 +280,14 @@ primvecs(lattice::BravaisLattice) = lattice.a
 @doc doc"Returns the primitive vectors of the reciprocal lattice" ->
 recivecs(lattice::BravaisLattice) = lattice.b
 
-nmomenta(lattice::BravaisLattice) = size(lattice.momenta, 2)
+nmomenta(lattice::BravaisLattice) = length(lattice.momenta)
 nmomenta(lattice::WrappedBravaisLattice) = nmomenta(lattice.lattice)
 
 eachmomentumindex(lattice::AbstractBravaisLattice) = 1:nmomenta(lattice)
 
 # FIXME: need a way to iterate momenta
 
-momentum(lattice::BravaisLattice, idx::Integer) = lattice.momenta[:, idx]
+momentum(lattice::BravaisLattice, idx::Integer) = lattice.momenta[idx]
 function momentum{D}(lattice::BravaisLattice{D}, idx::Integer, charge::Integer)
     # "total momentum", really.  note that this may return things greater than one.
     x1 = momentum(lattice, idx)
@@ -332,6 +343,7 @@ function wraparound_site!{D}(lattice::LatticeImplUnion{D}, site::AbstractVector{
     N = bravais(lattice).N
     M = bravais(lattice).M
 
+    # FIXME: use a @generated function to unroll
     for i in D:-1:1
         if !(0 <= site[i] < N[i])
             if M[i,i] != 0
@@ -355,9 +367,20 @@ function wraparound_site!{D}(lattice::LatticeImplUnion{D}, site::AbstractVector{
 
     return site, wrap
 end
+
 wraparound_site!(lattice::WrappedLatticeUnion, site::AbstractVector{Int}) = wraparound_site!(lattice.lattice, site)
 
-wraparound_site(lattice::AbstractLattice, site::AbstractVector{Int}) = wraparound_site!(lattice, copy(site))
+function wraparound_site{D}(lattice::AbstractBravaisLattice{D}, site::AbstractVector{Int})
+    site, wrap = wraparound_site!(lattice, MVector{D,Int}(site))
+    return SVector{D,Int}(site), wrap
+end
+
+function wraparound_site{D,Dp1}(lattice::AbstractLatticeWithBasis{D,Dp1}, site::AbstractVector{Int})
+    @assert Dp1 == D + 1 # FIXME: should be able to make this a static assert somehow
+    site, wrap = wraparound_site!(lattice, MVector{Dp1,Int}(site))
+    return SVector{Dp1,Int}(site), wrap
+end
+
 wraparound_site(lattice::AbstractLattice, index::Integer) = wraparound_site(lattice, lattice[index])
 
 function wraparound(lattice::AbstractLattice, site_or_index::Union{AbstractVector{Int}, Integer})
@@ -447,14 +470,14 @@ function _hypercubic_sublattice_index(site::AbstractVector{Int})
     return parity & 1
 end
 
-immutable HypercubicLattice{D} <: WrappedBravaisLattice{D}
-    lattice::BravaisLattice{D}
+immutable HypercubicLattice{D,Dsq} <: WrappedBravaisLattice{D}
+    lattice::BravaisLattice{D,Dsq}
     bipartite::Bool
 
-    function (::Type{HypercubicLattice{D}}){D}(N::AbstractVector{Int},
-                                               M::AbstractMatrix{Int}=diagm(N), # assumes pbc
-                                               η::AbstractVector{Rational{Int}}=zeros(Rational{Int}, length(N)))
-        bravaislattice = BravaisLattice{D}(N, M, η)
+    function (::Type{HypercubicLattice{D,Dsq}}){D,Dsq}(N::AbstractVector{Int},
+                                                       M::AbstractMatrix{Int}=diagm(N), # assumes pbc
+                                                       η::AbstractVector{Rational{Int}}=zeros(SVector{D,Rational{Int}}))
+        bravaislattice = BravaisLattice{D,Dsq}(N, M, η)
         bipartite = true
         for i in 1:D
             if M[i,i] != 0
@@ -470,8 +493,16 @@ immutable HypercubicLattice{D} <: WrappedBravaisLattice{D}
                 end
             end
         end
-        new{D}(bravaislattice, bipartite)
+        new{D,Dsq}(bravaislattice, bipartite)
     end
+end
+
+function (::Type{HypercubicLattice{D}}){D}(args...)
+    HypercubicLattice{D,square(D)}(args...)
+end
+
+function (::Type{HypercubicLattice}){D}(N::StaticVector{D,Int}, args...)
+    HypercubicLattice{D}(N, args...)
 end
 
 isbipartite(lattice::HypercubicLattice) = lattice.bipartite
@@ -482,9 +513,9 @@ function sublattice_index(lattice::HypercubicLattice, site::AbstractVector{Int})
     return _hypercubic_sublattice_index(site)
 end
 
-@compat const ChainLattice = HypercubicLattice{1}
-@compat const SquareLattice = HypercubicLattice{2}
-@compat const CubicLattice = HypercubicLattice{3}
+@compat const ChainLattice = HypercubicLattice{1,1}
+@compat const SquareLattice = HypercubicLattice{2,4}
+@compat const CubicLattice = HypercubicLattice{3,9}
 
 # FIXME: do the wrapping etc in a common function for all lattice
 # types.  then the siteneighbors function (or `siteneighbordsimpl`)
@@ -557,13 +588,13 @@ function _triangular_sublattice_index(site::AbstractVector{Int})
 end
 
 immutable TriangularLattice <: WrappedBravaisLattice{2}
-    lattice::BravaisLattice{2}
+    lattice::BravaisLattice{2,4}
     tripartite::Bool
 
     function TriangularLattice(N::AbstractVector{Int},
                                M::AbstractMatrix{Int}=diagm(N), # assumes pbc
-                               η::AbstractVector{Rational{Int}}=zeros(Rational{Int}, length(N)))
-        bravaislattice = BravaisLattice{2}(N, M, η, [1.0 0; 0.5 sqrt(3)/2]')
+                               η::AbstractVector{Rational{Int}}=zeros(SVector{2,Rational{Int}}))
+        bravaislattice = BravaisLattice{2,4}(N, M, η, [1.0 0; 0.5 sqrt(3)/2]')
         tripartite = true
         for i in 1:2
             if M[i,i] != 0
@@ -604,15 +635,15 @@ end
 
 #= Begin specific lattice w/ basis implementations =#
 
-immutable HoneycombLattice <: WrappedLatticeWithBasis{2}
-    lattice::LatticeWithBasis{2}
+immutable HoneycombLattice <: WrappedLatticeWithBasis{2,3}
+    lattice::LatticeWithBasis{2,4,3}
 
     function HoneycombLattice(N::AbstractVector{Int},
                               M::AbstractMatrix{Int}=diagm(N), # assumes pbc
-                              η::AbstractVector{Rational{Int}}=zeros(Rational{Int}, length(N)))
-        a = [1.5 sqrt(3)/2; 0 sqrt(3)]'
+                              η::AbstractVector{Rational{Int}}=zeros(SVector{2,Rational{Int}}))
+        a = @SMatrix([1.5 sqrt(3)/2; 0 sqrt(3)])'
         basis = [0 0; 1.0 0]'
-        return new(LatticeWithBasis{2}(N, M, η, a, basis))
+        return new(LatticeWithBasis{2,4,3}(N, M, η, a, basis))
     end
 end
 
@@ -637,15 +668,15 @@ function siteneighbors(f, lattice::HoneycombLattice, ridx::Integer, ::Type{Val{1
     _siteneighbors2d(f, lattice, ridx, offsets)
 end
 
-immutable KagomeLattice <: WrappedLatticeWithBasis{2}
-    lattice::LatticeWithBasis{2}
+immutable KagomeLattice <: WrappedLatticeWithBasis{2,3}
+    lattice::LatticeWithBasis{2,4,3}
 
     function KagomeLattice(N::AbstractVector{Int},
                            M::AbstractMatrix{Int}=diagm(N), # assumes pbc
-                           η::AbstractVector{Rational{Int}}=zeros(Rational{Int}, length(N)))
-        a = [2 0; 1 sqrt(3)]'
+                           η::AbstractVector{Rational{Int}}=zeros(SVector{2,Rational{Int}}))
+        a = @SMatrix([2 0; 1 sqrt(3)])'
         basis = [0 0; 0.5 sqrt(3)/2; 1.0 0]'
-        return new(LatticeWithBasis{2}(N, M, η, a, basis))
+        return new(LatticeWithBasis{2,4,3}(N, M, η, a, basis))
     end
 end
 

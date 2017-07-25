@@ -2,6 +2,7 @@ using Bravais
 using Base.Test
 
 using Compat
+import StaticArrays
 
 debug = false
 
@@ -19,7 +20,7 @@ lattice = TriangularLattice([4,6])
 @test realspace(lattice, [0,1]) == [0.5, sqrt(3)/2]
 @test realspace(lattice, 7) == [1.0, 0]
 
-@test length(BravaisLattice{2}([4,6])) == 4*6
+@test length(BravaisLattice(StaticArrays.@SVector [4,6])) == 4*6
 @test length(HypercubicLattice{4}([4,6,8,10])) == 4*6*8*10
 @test length(TriangularLattice([4,6])) == 4*6
 @test length(HoneycombLattice([3,5])) == 3*5*2
@@ -30,43 +31,45 @@ lattice = TriangularLattice([4,6])
 
 lattices = Any[
     "Basic BravaisLattice",
-    BravaisLattice{2}([4,6]),
+    @inferred(BravaisLattice{2}([4,6])),
+    @inferred(BravaisLattice(StaticArrays.@SVector [4,6])),
 
     "1D and effectively 1D",
-    ChainLattice([8]),
-    CubicLattice([1, 1, 8]),
-    CubicLattice([1, 8, 1]),
+    @inferred(ChainLattice([8])),
+    @inferred(CubicLattice([1, 1, 8])),
+    @inferred(CubicLattice([1, 8, 1])),
 
     "1D Twisted",
-    ChainLattice([6], diagm([6]), [0//1]),
-    ChainLattice([6], diagm([6]), [1//2]),
-    ChainLattice([6], diagm([6]), [1//5]),
+    @inferred(ChainLattice([6], diagm([6]), [0//1])),
+    @inferred(ChainLattice([6], diagm([6]), [1//2])),
+    @inferred(ChainLattice([6], diagm([6]), [1//5])),
 
     "2D",
-    SquareLattice([4,6]),
-    SquareLattice([6,4]),
+    @inferred(SquareLattice([4,6])),
+    @inferred(SquareLattice([6,4])),
 
     "2D twisted",
-    SquareLattice([4,6], diagm([4,6]), [1//7, 3//13]),
-    SquareLattice([6,4], diagm([6,4]), [1//7, 3//13]),
+    @inferred(SquareLattice([4,6], diagm([4,6]), [1//7, 3//13])),
+    @inferred(SquareLattice([6,4], diagm([6,4]), [1//7, 3//13])),
 
     "2D twisted cylinder",
-    SquareLattice([6,4], diagm([6,0]), [1//7, 0//1]),
+    @inferred(SquareLattice([6,4], diagm([6,0]), [1//7, 0//1])),
 
     "2D twisted helix",
-    SquareLattice([6,4], [6 0; 1 4], [1//7, 3//13]),
+    @inferred(SquareLattice([6,4], [6 0; 1 4], [1//7, 3//13])),
 
     "3D like",
-    CubicLattice([4,2,6]),
-    HypercubicLattice{4}([4,2,6,1]),
+    @inferred(CubicLattice([4,2,6])),
+    @inferred(HypercubicLattice{4}([4,2,6,1])),
+    @inferred(HypercubicLattice(StaticArrays.@MVector [4,2,6,1])),
 
     "3D open twisted helix",
-    CubicLattice([4,6,8], [4 0 0; 0 6 0; 1 0 8], [1//7, 0//1, 3//13]),
+    @inferred(CubicLattice([4,6,8], [4 0 0; 0 6 0; 1 0 8], [1//7, 0//1, 3//13])),
 
     "Other lattices",
-    TriangularLattice([4,6]),
-    HoneycombLattice([3,5]),
-    KagomeLattice([8,6]),
+    @inferred(TriangularLattice([4,6])),
+    @inferred(HoneycombLattice([3,5])),
+    @inferred(KagomeLattice([8,6])),
 ]
 
 for lattice in lattices
