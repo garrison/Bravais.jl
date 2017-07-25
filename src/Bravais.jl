@@ -131,11 +131,11 @@ end
 
 Base.@pure square(x) = x * x
 
-function (::Type{BravaisLattice{D}}){D}(args...)
+function (::Type{BravaisLattice{D}})(args...) where {D}
     BravaisLattice{D,square(D)}(args...)
 end
 
-function (::Type{BravaisLattice}){D}(N::StaticVector{D,Int}, args...)
+function (::Type{BravaisLattice})(N::StaticVector{D,Int}, args...) where {D}
     BravaisLattice{D}(N, args...)
 end
 
@@ -257,7 +257,7 @@ end
 
 dimensions(lattice::BravaisLattice) = lattice.N  # FIXME: rename this `extent`?
 
-ndimensions{D}(::AbstractLattice{D}) = D
+ndimensions(::AbstractLattice{D}) where {D} = D
 
 twist(lattice::BravaisLattice) = lattice.η
 twist(lattice::LatticeWithBasis) = bravais(lattice).η
@@ -286,7 +286,7 @@ eachmomentumindex(lattice::AbstractBravaisLattice) = 1:nmomenta(lattice)
 # FIXME: need a way to iterate momenta
 
 momentum(lattice::BravaisLattice, idx::Integer) = lattice.momenta[idx]
-function momentum{D}(lattice::BravaisLattice{D}, idx::Integer, charge::Integer)
+function momentum(lattice::BravaisLattice{D}, idx::Integer, charge::Integer) where {D}
     # "total momentum", really.  note that this may return things greater than one.
     x1 = momentum(lattice, idx)
     if charge == 1
@@ -324,7 +324,7 @@ end
 
 realspace(lattice::LatticeImplUnion, ridx::Integer, args...) = realspace(lattice, lattice[ridx], args...)
 
-function wraparound_site!{D}(lattice::LatticeImplUnion{D}, site::AbstractVector{Int})
+function wraparound_site!(lattice::LatticeImplUnion{D}, site::AbstractVector{Int}) where {D}
     mc = maxcoords(lattice)
     length(site) == length(mc) || throw(ArgumentError(""))
 
@@ -368,15 +368,9 @@ end
 
 wraparound_site!(lattice::WrappedLatticeUnion, site::AbstractVector{Int}) = wraparound_site!(lattice.lattice, site)
 
-function wraparound_site{D}(lattice::AbstractBravaisLattice{D}, site::AbstractVector{Int})
-    site, wrap = wraparound_site!(lattice, MVector{D,Int}(site))
-    return SVector{D,Int}(site), wrap
-end
-
-function wraparound_site{D,Dp1}(lattice::AbstractLatticeWithBasis{D,Dp1}, site::AbstractVector{Int})
-    @assert Dp1 == D + 1 # FIXME: should be able to make this a static assert somehow
-    site, wrap = wraparound_site!(lattice, MVector{Dp1,Int}(site))
-    return SVector{Dp1,Int}(site), wrap
+function wraparound_site(lattice::Union{AbstractBravaisLattice{Dprime},AbstractLatticeWithBasis{D,Dprime} where D}, site::AbstractVector{Int}) where {Dprime}
+    site, wrap = wraparound_site!(lattice, MVector{Dprime,Int}(site))
+    return SVector{Dprime,Int}(site), wrap
 end
 
 wraparound_site(lattice::AbstractLattice, index::Integer) = wraparound_site(lattice, lattice[index])
@@ -495,11 +489,11 @@ struct HypercubicLattice{D,Dsq} <: WrappedBravaisLattice{D}
     end
 end
 
-function (::Type{HypercubicLattice{D}}){D}(args...)
+function (::Type{HypercubicLattice{D}})(args...) where {D}
     HypercubicLattice{D,square(D)}(args...)
 end
 
-function (::Type{HypercubicLattice}){D}(N::StaticVector{D,Int}, args...)
+function (::Type{HypercubicLattice})(N::StaticVector{D,Int}, args...) where {D}
     HypercubicLattice{D}(N, args...)
 end
 
@@ -542,7 +536,7 @@ function siteneighbors(f, lattice::ChainLattice, ridx::Integer, ::Type{Val{1}})
     nothing
 end
 
-function siteneighbors{N}(f, lattice::ChainLattice, ridx::Integer, ::Type{Val{N}})
+function siteneighbors(f, lattice::ChainLattice, ridx::Integer, ::Type{Val{N}}) where {N}
     M = lattice.lattice.M
     mc = maxcoords(lattice)
     site = lattice[ridx]
@@ -556,7 +550,7 @@ function siteneighbors{N}(f, lattice::ChainLattice, ridx::Integer, ::Type{Val{N}
     nothing
 end
 
-function siteneighbors{D}(f, lattice::HypercubicLattice{D}, ridx::Integer, ::Type{Val{1}})
+function siteneighbors(f, lattice::HypercubicLattice{D}, ridx::Integer, ::Type{Val{1}}) where {D}
     M = lattice.lattice.M
     mc = maxcoords(lattice)
 
