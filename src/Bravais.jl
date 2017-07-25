@@ -144,21 +144,20 @@ immutable LatticeWithBasis{D,Dsq,Dp1} <: AbstractLatticeWithBasis{D,Dp1}
     N_tot::Int
     maxcoords::SVector{Dp1,Int}
     bravaislattice::BravaisLattice{D,Dsq}
-    basis::Matrix{Float64} # ZZZ XXX could be vector of SVector's but then we would need to modify how it is passed/used
+    basis::Vector{SVector{D,Float64}}
     strides::SVector{Dp1,Int}
 
     function (::Type{LatticeWithBasis{D,Dsq,Dp1}}){D,Dsq,Dp1}(N::AbstractVector{Int},
                                                               M::AbstractMatrix{Int}=diagm(N), # assumes pbc
                                                               η::AbstractVector{Rational{Int}}=zeros(SVector{D,Rational{Int}}),
                                                               a::AbstractMatrix{Float64}=eye(SMatrix{D,D}),
-                                                              basis::AbstractMatrix{Float64}=zeros(D, 1))
+                                                              basis::Vector{SVector{D,Float64}}=[zeros(SVector{D,Float64})])
         @assert Dp1 == D + 1
         bravaislattice = BravaisLattice{D,Dsq}(N, M, η, a)
 
         # check basis
-        nbasis = size(basis, 2)
+        nbasis = length(basis)
         nbasis > 0 || throw(ArgumentError(""))
-        size(basis, 1) == D || throw(ArgumentError(""))
 
         # determine N_tot and maxcoords, now that we know the basis size
         N_tot = prod(N) * nbasis
@@ -321,7 +320,7 @@ realspace(lattice::BravaisLattice, site::AbstractVector{Int}, wrap::AbstractVect
 
 function realspace(lattice::LatticeWithBasis, site::AbstractVector{Int}, args...)
     length(site) == length(lattice.maxcoords) || throw(ArgumentError(""))
-    return realspace(bravais(lattice), site[1:end-1], args...) + lattice.basis[:, site[end]+1]
+    return realspace(bravais(lattice), site[1:end-1], args...) + lattice.basis[site[end]+1]
 end
 
 realspace(lattice::LatticeImplUnion, ridx::Integer, args...) = realspace(lattice, lattice[ridx], args...)
@@ -642,7 +641,7 @@ immutable HoneycombLattice <: WrappedLatticeWithBasis{2,3}
                               M::AbstractMatrix{Int}=diagm(N), # assumes pbc
                               η::AbstractVector{Rational{Int}}=zeros(SVector{2,Rational{Int}}))
         a = @SMatrix([1.5 sqrt(3)/2; 0 sqrt(3)])'
-        basis = [0 0; 1.0 0]'
+        basis = [@SVector([0.0, 0]), @SVector([1.0, 0])]
         return new(LatticeWithBasis{2,4,3}(N, M, η, a, basis))
     end
 end
@@ -675,7 +674,7 @@ immutable KagomeLattice <: WrappedLatticeWithBasis{2,3}
                            M::AbstractMatrix{Int}=diagm(N), # assumes pbc
                            η::AbstractVector{Rational{Int}}=zeros(SVector{2,Rational{Int}}))
         a = @SMatrix([2 0; 1 sqrt(3)])'
-        basis = [0 0; 0.5 sqrt(3)/2; 1.0 0]'
+        basis = [@SVector([0.0, 0]), @SVector([0.5, √3/2]), @SVector([1.0, 0])]
         return new(LatticeWithBasis{2,4,3}(N, M, η, a, basis))
     end
 end
