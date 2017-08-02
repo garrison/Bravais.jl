@@ -66,10 +66,10 @@ struct BravaisLattice{D,Dsq} <: AbstractBravaisLattice{D}
     momenta::Vector{SVector{D,Rational{Int}}}
     strides::SVector{D,Int}
 
-    function (::Type{BravaisLattice{D,Dsq}}){D,Dsq}(N::AbstractVector{Int},
-                                                    M::AbstractMatrix{Int}=diagm(N), # assumes pbc
-                                                    η::AbstractVector{Rational{Int}}=zeros(SVector{D,Rational{Int}}),
-                                                    a::AbstractMatrix{Float64}=eye(SMatrix{D,D}))
+    function BravaisLattice{D,Dsq}(N::AbstractVector{Int},
+                                   M::AbstractMatrix{Int}=diagm(N), # assumes pbc
+                                   η::AbstractVector{Rational{Int}}=zeros(SVector{D,Rational{Int}}),
+                                   a::AbstractMatrix{Float64}=eye(SMatrix{D,D})) where {D,Dsq}
         @assert Dsq == D * D
 
         # check N
@@ -125,19 +125,17 @@ struct BravaisLattice{D,Dsq} <: AbstractBravaisLattice{D}
             s *= N[i]
         end
 
-        new{D,Dsq}(N_tot, copy(N), copy(M), copy(η), copy(a), b, momenta, strides)
+        new(N_tot, copy(N), copy(M), copy(η), copy(a), b, momenta, strides)
     end
 end
 
 Base.@pure square(x) = x * x
 
-function (::Type{BravaisLattice{D}})(args...) where {D}
+BravaisLattice{D}(args...) where {D} =
     BravaisLattice{D,square(D)}(args...)
-end
 
-function (::Type{BravaisLattice})(N::StaticVector{D,Int}, args...) where {D}
+BravaisLattice(N::StaticVector{D,Int}, args...) where {D} =
     BravaisLattice{D}(N, args...)
-end
 
 struct LatticeWithBasis{D,Dsq,Dp1} <: AbstractLatticeWithBasis{D,Dp1}
     N_tot::Int
@@ -146,11 +144,11 @@ struct LatticeWithBasis{D,Dsq,Dp1} <: AbstractLatticeWithBasis{D,Dp1}
     basis::Vector{SVector{D,Float64}}
     strides::SVector{Dp1,Int}
 
-    function (::Type{LatticeWithBasis{D,Dsq,Dp1}}){D,Dsq,Dp1}(N::AbstractVector{Int},
-                                                              M::AbstractMatrix{Int}=diagm(N), # assumes pbc
-                                                              η::AbstractVector{Rational{Int}}=zeros(SVector{D,Rational{Int}}),
-                                                              a::AbstractMatrix{Float64}=eye(SMatrix{D,D}),
-                                                              basis::Vector{SVector{D,Float64}}=[zeros(SVector{D,Float64})])
+    function LatticeWithBasis{D,Dsq,Dp1}(N::AbstractVector{Int},
+                                         M::AbstractMatrix{Int}=diagm(N), # assumes pbc
+                                         η::AbstractVector{Rational{Int}}=zeros(SVector{D,Rational{Int}}),
+                                         a::AbstractMatrix{Float64}=eye(SMatrix{D,D}),
+                                         basis::Vector{SVector{D,Float64}}=[zeros(SVector{D,Float64})]) where {D,Dsq,Dp1}
         @assert Dp1 == D + 1
         bravaislattice = BravaisLattice{D,Dsq}(N, M, η, a)
 
@@ -171,7 +169,7 @@ struct LatticeWithBasis{D,Dsq,Dp1} <: AbstractLatticeWithBasis{D,Dp1}
             s *= N[i]
         end
 
-        new{D,Dsq,Dp1}(N_tot, maxcoords, bravaislattice, copy(basis), strides)
+        new(N_tot, maxcoords, bravaislattice, copy(basis), strides)
     end
 end
 
@@ -466,9 +464,9 @@ struct HypercubicLattice{D,Dsq} <: WrappedBravaisLattice{D}
     lattice::BravaisLattice{D,Dsq}
     bipartite::Bool
 
-    function (::Type{HypercubicLattice{D,Dsq}}){D,Dsq}(N::AbstractVector{Int},
-                                                       M::AbstractMatrix{Int}=diagm(N), # assumes pbc
-                                                       η::AbstractVector{Rational{Int}}=zeros(SVector{D,Rational{Int}}))
+    function HypercubicLattice{D,Dsq}(N::AbstractVector{Int},
+                                      M::AbstractMatrix{Int}=diagm(N), # assumes pbc
+                                      η::AbstractVector{Rational{Int}}=zeros(SVector{D,Rational{Int}})) where {D,Dsq}
         bravaislattice = BravaisLattice{D,Dsq}(N, M, η)
         bipartite = true
         for i in 1:D
@@ -485,17 +483,15 @@ struct HypercubicLattice{D,Dsq} <: WrappedBravaisLattice{D}
                 end
             end
         end
-        new{D,Dsq}(bravaislattice, bipartite)
+        new(bravaislattice, bipartite)
     end
 end
 
-function (::Type{HypercubicLattice{D}})(args...) where {D}
+HypercubicLattice{D}(args...) where {D} =
     HypercubicLattice{D,square(D)}(args...)
-end
 
-function (::Type{HypercubicLattice})(N::StaticVector{D,Int}, args...) where {D}
+HypercubicLattice(N::StaticVector{D,Int}, args...) where {D} =
     HypercubicLattice{D}(N, args...)
-end
 
 isbipartite(lattice::HypercubicLattice) = lattice.bipartite
 istripartite(::HypercubicLattice) = false
@@ -711,7 +707,7 @@ struct LatticeTranslationCache{LatticeType<:AbstractLattice}
     direction::Int
     cache::Vector{Tuple{Int,Rational{Int}}}
 
-    function (::Type{LatticeTranslationCache{LatticeType}}){LatticeType}(lattice, direction)
+    function LatticeTranslationCache(lattice::LatticeType, direction::Integer) where {LatticeType<:AbstractLattice}
         cache = Tuple{Int,Rational{Int}}[]
         sizehint!(cache, length(lattice))
         for i in 1:length(lattice)
@@ -721,10 +717,8 @@ struct LatticeTranslationCache{LatticeType<:AbstractLattice}
     end
 end
 
-LatticeTranslationCache{LatticeType<:AbstractLattice}(lattice::LatticeType, direction::Integer) = LatticeTranslationCache{LatticeType}(lattice, direction)
-
-translateη{LatticeType<:AbstractLattice}(ltrc::LatticeTranslationCache{LatticeType}, j::Integer) = ltrc.cache[j]
-translateη{LatticeType<:AbstractLattice}(ltrc::LatticeTranslationCache{LatticeType}, site::AbstractVector{Int}) = translateη(ltrc, findfirst(ltrc.lattice, site))
+translateη(ltrc::LatticeTranslationCache, j::Integer) = ltrc.cache[j]
+translateη(ltrc::LatticeTranslationCache, site::AbstractVector{Int}) = translateη(ltrc, findfirst(ltrc.lattice, site))
 
 #= End cache objects =#
 
