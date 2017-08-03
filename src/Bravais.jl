@@ -284,13 +284,13 @@ eachmomentumindex(lattice::AbstractBravaisLattice) = 1:nmomenta(lattice)
 # FIXME: need a way to iterate momenta
 
 momentum(lattice::BravaisLattice, idx::Integer) = lattice.momenta[idx]
-function momentum(lattice::BravaisLattice{D}, idx::Integer, charge::Integer) where {D}
+function momentum(lattice::BravaisLattice{D}, idx::Integer, charge::Integer)::SVector{D,Rational{Int}} where {D}
     # "total momentum", really.  note that this may return things greater than one.
     x1 = momentum(lattice, idx)
     if charge == 1
         return x1
     end
-    offsets = zeros(Rational{Int}, D)
+    offsets = zeros(MVector{D,Rational{Int}})
     for i in 1:D
         if lattice.M[i,i] != 0
             offsets[i] = lattice.η[i] * (charge - 1)
@@ -565,7 +565,7 @@ function siteneighbors(f, lattice::HypercubicLattice{D}, ridx::Integer, ::Type{V
 end
 
 function siteneighbors(f, lattice::SquareLattice, ridx::Integer, ::Type{Val{2}})
-    offsets = ([1,1], [-1,1])
+    offsets = @SVector [@SVector([1,1]), @SVector([-1,1])]
     _siteneighbors2d(f, lattice, ridx, offsets)
 end
 
@@ -613,17 +613,17 @@ end
 # FIXME: many of these neighbor functions can use special handling when the lattice height or width is 1 in a direction.  or we could just forbid this.
 
 function siteneighbors(f, lattice::TriangularLattice, ridx::Integer, ::Type{Val{1}})
-    offsets = ([1,0], [0,1], [-1,1])
+    offsets = @SVector [@SVector([1,0]), @SVector([0,1]), @SVector([-1,1])]
     _siteneighbors2d(f, lattice, ridx, offsets)
 end
 
 function siteneighbors(f, lattice::TriangularLattice, ridx::Integer, ::Type{Val{2}})
-    offsets = ([2,-1], [1,1], [-1,2])
+    offsets = @SVector [@SVector([2,-1]), @SVector([1,1]), @SVector([-1,2])]
     _siteneighbors2d(f, lattice, ridx, offsets)
 end
 
 function siteneighbors(f, lattice::TriangularLattice, ridx::Integer, ::Type{Val{3}})
-    offsets = ([2,0], [0,2], [-2,2])
+    offsets = @SVector [@SVector([2,0]), @SVector([0,2]), @SVector([-2,2])]
     _siteneighbors2d(f, lattice, ridx, offsets)
 end
 
@@ -657,13 +657,14 @@ end
 function siteneighbors(f, lattice::HoneycombLattice, ridx::Integer, ::Type{Val{1}})
     site = lattice[ridx]
     if site[end] == 0
-        offsets = ([0, 0, 1], [-1, 0, 1], [-1, 1, 1])
+        offsets = @SVector [@SVector([0, 0, 1]), @SVector([-1, 0, 1]), @SVector([-1, 1, 1])]
+        _siteneighbors2d(f, lattice, ridx, offsets)
     else
         @assert site[end] == 1
-        offsets = () # otherwise we are double counting!
-        #offsets = ([0, 0, -1], [1, 0, -1], [1, -1, -1])
+        # Commented out, otherwise we are double counting!
+        #offsets = @SVector [@SVector([0, 0, -1]), @SVector([1, 0, -1]), @SVector([1, -1, -1])]
+        #_siteneighbors2d(f, lattice, ridx, offsets)
     end
-    _siteneighbors2d(f, lattice, ridx, offsets)
 end
 
 struct KagomeLattice <: WrappedLatticeWithBasis{2,3}
@@ -690,12 +691,12 @@ end
 function siteneighbors(f, lattice::KagomeLattice, ridx::Integer, ::Type{Val{1}})
     site = lattice[ridx]
     if site[end] == 0
-        offsets = ([0, 0, 1], [0, -1, 1])
+        offsets = @SVector [@SVector([0, 0, 1]), @SVector([0, -1, 1])]
     elseif site[end] == 1
-        offsets = ([0, 0, 1], [-1, 1, 1])
+        offsets = @SVector [@SVector([0, 0, 1]), @SVector([-1, 1, 1])]
     else
         @assert site[end] == 2
-        offsets = ([0, 0, -2], [1, 0, -2])
+        offsets = @SVector [@SVector([0, 0, -2]), @SVector([1, 0, -2])]
     end
     _siteneighbors2d(f, lattice, ridx, offsets)
 end
