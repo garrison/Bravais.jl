@@ -627,6 +627,14 @@ function siteneighbors(f, lattice::TriangularLattice, ridx::Integer, ::Type{Val{
     _siteneighbors2d(f, lattice, ridx, offsets)
 end
 
+function rhombi(lattice::TriangularLattice)
+    @SVector [
+        @SVector([@SVector([0,0]), @SVector([1,-1]), @SVector([1,0]), @SVector([0,1])]),
+        @SVector([@SVector([0,0]), @SVector([0,1]), @SVector([-1,1]), @SVector([-1,0])]),
+        @SVector([@SVector([0,0]), @SVector([-1,0]), @SVector([0,-1]), @SVector([1,-1])]),
+    ]
+end
+
 @delegate WrappedBravaisLattice.lattice [ Base.length, dimensions, ndimensions, primvecs, recivecs, momentum, kdotr, momentumspace, realspace ]
 
 #= End specific Bravais lattice implementations =#
