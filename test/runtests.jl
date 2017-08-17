@@ -104,6 +104,7 @@ for lattice in lattices
     end
     @test last == true
 
+    @inferred dimensions(lattice)
     d = @inferred ndimensions(lattice)
     η = @inferred twist(lattice)
     M = @inferred repeater(lattice)

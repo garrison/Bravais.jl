@@ -254,6 +254,8 @@ end
 # arrays.
 
 dimensions(lattice::BravaisLattice) = lattice.N  # FIXME: rename this `extent`?
+dimensions(lattice::LatticeWithBasis) = dimensions(bravais(lattice))
+dimensions(lattice::WrappedLatticeUnion) = dimensions(lattice.lattice)
 
 ndimensions(::AbstractLattice{D}) where {D} = D
 
@@ -635,7 +637,7 @@ function rhombi(lattice::TriangularLattice)
     ]
 end
 
-@delegate WrappedBravaisLattice.lattice [ Base.length, dimensions, ndimensions, primvecs, recivecs, momentum, kdotr, momentumspace, realspace ]
+@delegate WrappedBravaisLattice.lattice [ Base.length, ndimensions, primvecs, recivecs, momentum, kdotr, momentumspace, realspace ]
 
 #= End specific Bravais lattice implementations =#
 
