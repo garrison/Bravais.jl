@@ -483,20 +483,31 @@ end
 
 function test_neighbor_distances(lattice, neigh=Val{1}, expected_squared=1)
     neighbors(lattice, neigh) do i, j, wrap
-        diff = realspace(lattice, i) - realspace(lattice, j)
+        diff = realspace(lattice, i) - realspace(lattice, j) - realspace(bravais(lattice), wrap .* dimensions(lattice))
         dist_squared = dot(diff, diff)
         @test expected_squared ≈ dist_squared atol=1e-8
     end
 end
 
+test_neighbor_distances(ChainLattice([8]))
 test_neighbor_distances(ChainLattice([8], diagm([0])))
+test_neighbor_distances(ChainLattice([8]), Val{1}, 1)
 test_neighbor_distances(ChainLattice([8], diagm([0])), Val{1}, 1)
+test_neighbor_distances(ChainLattice([8]), Val{2}, 4)
 test_neighbor_distances(ChainLattice([8], diagm([0])), Val{2}, 4)
+test_neighbor_distances(ChainLattice([8]), Val{5}, 25)
 test_neighbor_distances(ChainLattice([8], diagm([0])), Val{5}, 25)
+test_neighbor_distances(SquareLattice([4,6]))
 test_neighbor_distances(SquareLattice([4,6], diagm([0,0])))
+test_neighbor_distances(SquareLattice([4,6]), Val{2}, 2)
 test_neighbor_distances(SquareLattice([4,6], diagm([0,0])), Val{2}, 2)
+test_neighbor_distances(TriangularLattice([4,6]))
 test_neighbor_distances(TriangularLattice([4,6], diagm([0,0])))
+test_neighbor_distances(TriangularLattice([4,6]), Val{2}, 3)
 test_neighbor_distances(TriangularLattice([4,6], diagm([0,0])), Val{2}, 3)
+test_neighbor_distances(TriangularLattice([4,6]), Val{3}, 4)
 test_neighbor_distances(TriangularLattice([4,6], diagm([0,0])), Val{3}, 4)
+test_neighbor_distances(HoneycombLattice([4,6]))
 test_neighbor_distances(HoneycombLattice([4,6], diagm([0,0])))
+test_neighbor_distances(KagomeLattice([4,6]))
 test_neighbor_distances(KagomeLattice([4,6], diagm([0,0])))
