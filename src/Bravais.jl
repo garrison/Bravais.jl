@@ -193,6 +193,8 @@ maxcoords(lattice::WrappedLatticeUnion) = maxcoords(lattice.lattice)
 
 Base.length(lattice::LatticeImplUnion) = lattice.N_tot
 
+Base.eachindex(lattice::AbstractLattice) = Base.OneTo(length(lattice))
+
 Base.size(lattice::AbstractLattice) = (length(lattice),)
 
 function Base.getindex(lattice::AbstractLattice, index::Integer)
