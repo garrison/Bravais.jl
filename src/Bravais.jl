@@ -19,21 +19,7 @@ module Bravais
 
 using StaticArrays
 
-# This macro was originally written by JMW for DataStructures.jl.
-# It has been modified for use here.
-macro delegate(source, targets)
-    funcnames = map(x -> esc(x), targets.args)
-    fdefs = Any[]
-    typename = esc(source.args[1])
-    fieldname = esc(Expr(:quote, source.args[2].args[1]))
-    for funcname in funcnames
-        push!(fdefs, quote
-                         ($funcname)(a::($typename), args...) =
-                             ($funcname)(getfield(a, $fieldname), args...)
-                     end)
-    end
-    return Expr(:block, fdefs...)
-end
+include("delegate.jl")
 
 # Julia currently lacks row-major versions of sub2ind and ind2sub.  We
 # want to use these so the ordering for returned tuples is correct;
