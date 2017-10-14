@@ -91,7 +91,7 @@ struct BravaisLattice{D,Dsq} <: AbstractBravaisLattice{D}
         for idx in 1:nmomenta
             # FIXME: getting idx should be easier, once
             # multidimensional iteration is supported
-            ñ = [rowmajor_ind2sub(tuple(momenta_range...), idx)...] - 1
+            ñ = [rowmajor_ind2sub(tuple(momenta_range...), idx)...] .- 1
             for i in 1:D
                 if M[i,i] == 0
                     momentum[i] = 0
