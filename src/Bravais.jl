@@ -357,8 +357,8 @@ end
 wraparound_site!(lattice::WrappedLatticeUnion, site::AbstractVector{Int}) = wraparound_site!(lattice.lattice, site)
 
 function wraparound_site(lattice::Union{AbstractBravaisLattice{Dprime},AbstractLatticeWithBasis{D,Dprime} where D}, site::AbstractVector{Int}) where {Dprime}
-    site, wrap = wraparound_site!(lattice, MVector{Dprime,Int}(site))
-    return SVector{Dprime,Int}(site), wrap
+    site_, wrap = wraparound_site!(lattice, copy(MVector{Dprime,Int}(site)))
+    return SVector{Dprime,Int}(site_), wrap
 end
 
 wraparound_site(lattice::AbstractLattice, index::Integer) = wraparound_site(lattice, lattice[index])
