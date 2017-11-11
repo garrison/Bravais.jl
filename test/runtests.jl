@@ -39,20 +39,20 @@ lattices = Any[
     @inferred(CubicLattice([1, 8, 1])),
 
     "1D Twisted",
-    @inferred(ChainLattice([6], diagm([6]), [0//1])),
-    @inferred(ChainLattice([6], diagm([6]), [1//2])),
-    @inferred(ChainLattice([6], diagm([6]), [1//5])),
+    @inferred(ChainLattice([6], Diagonal([6]), [0//1])),
+    @inferred(ChainLattice([6], Diagonal([6]), [1//2])),
+    @inferred(ChainLattice([6], Diagonal([6]), [1//5])),
 
     "2D",
     @inferred(SquareLattice([4,6])),
     @inferred(SquareLattice([6,4])),
 
     "2D twisted",
-    @inferred(SquareLattice([4,6], diagm([4,6]), [1//7, 3//13])),
-    @inferred(SquareLattice([6,4], diagm([6,4]), [1//7, 3//13])),
+    @inferred(SquareLattice([4,6], Diagonal([4,6]), [1//7, 3//13])),
+    @inferred(SquareLattice([6,4], Diagonal([6,4]), [1//7, 3//13])),
 
     "2D twisted cylinder",
-    @inferred(SquareLattice([6,4], diagm([6,0]), [1//7, 0//1])),
+    @inferred(SquareLattice([6,4], Diagonal([6,0]), [1//7, 0//1])),
 
     "2D twisted helix",
     @inferred(SquareLattice([6,4], [6 0; 1 4], [1//7, 3//13])),
@@ -202,7 +202,7 @@ lattice = KagomeLattice([2,3])
 @test_throws ArgumentError translateη(lattice, 1, 3)
 
 # Invalid wraparound for OBC
-lattice = ChainLattice([8], diagm([0]))
+lattice = ChainLattice([8], Diagonal([0]))
 @inferred wraparound(lattice, [0])
 @inferred wraparound(lattice, [7])
 @test_throws ArgumentError wraparound(lattice, [19])
@@ -225,7 +225,7 @@ pairs = [
     (5, 6),
     (6, 1),
 ]
-test_neighbors(ChainLattice([6], diagm([6]), [1//5]), pairs)
+test_neighbors(ChainLattice([6], Diagonal([6]), [1//5]), pairs)
 test_neighbors(SquareLattice([6, 1]), pairs)
 test_neighbors(SquareLattice([1, 6]), pairs)
 test_neighbors(CubicLattice([6, 1, 1]), pairs)
@@ -251,7 +251,7 @@ pairs = [
 # make sure open boundary conditions in the 2 direction is equivalent
 # (unless i decide to remove this feature that doesn't double count these
 # links)
-test_neighbors(SquareLattice([4, 2], diagm([4, 0])), pairs)
+test_neighbors(SquareLattice([4, 2], Diagonal([4, 0])), pairs)
 
 # 4x3 Open
 pairs = [
@@ -276,7 +276,7 @@ pairs = [
     (10, 11),
     (11, 12),
 ]
-test_neighbors(SquareLattice([4, 3], diagm([4, 0])), pairs)
+test_neighbors(SquareLattice([4, 3], Diagonal([4, 0])), pairs)
 
 # 4x4
 pairs = [
@@ -396,12 +396,12 @@ end
 
 @test isbipartite(SquareLattice([4,4]))
 @test !isbipartite(SquareLattice([3,3]))
-@test isbipartite(SquareLattice([3,3], diagm([0,0])))
+@test isbipartite(SquareLattice([3,3], Diagonal([0,0])))
 @test !isbipartite(SquareLattice([4,3]))
 @test !isbipartite(SquareLattice([4,1])) # if two dimensions are specified, we don't consider this bipartite.
 @test !istripartite(SquareLattice([4,4]))
 
-lattice = SquareLattice([4, 3], diagm([4,0]))
+lattice = SquareLattice([4, 3], Diagonal([4,0]))
 test_neighbor_sublattices(lattice, [0,1])
 @test sublattice_index(lattice, 1) == 0
 @test sublattice_index(lattice, 2) == 1
@@ -449,10 +449,10 @@ lattice = TriangularLattice([4,3])
 @test !isbipartite(lattice)
 @test !istripartite(lattice)
 @test_throws ArgumentError sublattice_index(lattice, 1)
-lattice = TriangularLattice([4,3], diagm([0,3]))
+lattice = TriangularLattice([4,3], Diagonal([0,3]))
 @test !isbipartite(lattice)
 @test istripartite(lattice)
-lattice = TriangularLattice([4,3], diagm([0,0]))
+lattice = TriangularLattice([4,3], Diagonal([0,0]))
 @test !isbipartite(lattice)
 @test istripartite(lattice)
 
@@ -493,24 +493,24 @@ function test_neighbor_distances(lattice, neigh=Val{1}, expected_squared=1)
 end
 
 test_neighbor_distances(ChainLattice([8]))
-test_neighbor_distances(ChainLattice([8], diagm([0])))
+test_neighbor_distances(ChainLattice([8], Diagonal([0])))
 test_neighbor_distances(ChainLattice([8]), Val{1}, 1)
-test_neighbor_distances(ChainLattice([8], diagm([0])), Val{1}, 1)
+test_neighbor_distances(ChainLattice([8], Diagonal([0])), Val{1}, 1)
 test_neighbor_distances(ChainLattice([8]), Val{2}, 4)
-test_neighbor_distances(ChainLattice([8], diagm([0])), Val{2}, 4)
+test_neighbor_distances(ChainLattice([8], Diagonal([0])), Val{2}, 4)
 test_neighbor_distances(ChainLattice([8]), Val{5}, 25)
-test_neighbor_distances(ChainLattice([8], diagm([0])), Val{5}, 25)
+test_neighbor_distances(ChainLattice([8], Diagonal([0])), Val{5}, 25)
 test_neighbor_distances(SquareLattice([4,6]))
-test_neighbor_distances(SquareLattice([4,6], diagm([0,0])))
+test_neighbor_distances(SquareLattice([4,6], Diagonal([0,0])))
 test_neighbor_distances(SquareLattice([4,6]), Val{2}, 2)
-test_neighbor_distances(SquareLattice([4,6], diagm([0,0])), Val{2}, 2)
+test_neighbor_distances(SquareLattice([4,6], Diagonal([0,0])), Val{2}, 2)
 test_neighbor_distances(TriangularLattice([4,6]))
-test_neighbor_distances(TriangularLattice([4,6], diagm([0,0])))
+test_neighbor_distances(TriangularLattice([4,6], Diagonal([0,0])))
 test_neighbor_distances(TriangularLattice([4,6]), Val{2}, 3)
-test_neighbor_distances(TriangularLattice([4,6], diagm([0,0])), Val{2}, 3)
+test_neighbor_distances(TriangularLattice([4,6], Diagonal([0,0])), Val{2}, 3)
 test_neighbor_distances(TriangularLattice([4,6]), Val{3}, 4)
-test_neighbor_distances(TriangularLattice([4,6], diagm([0,0])), Val{3}, 4)
+test_neighbor_distances(TriangularLattice([4,6], Diagonal([0,0])), Val{3}, 4)
 test_neighbor_distances(HoneycombLattice([4,6]))
-test_neighbor_distances(HoneycombLattice([4,6], diagm([0,0])))
+test_neighbor_distances(HoneycombLattice([4,6], Diagonal([0,0])))
 test_neighbor_distances(KagomeLattice([4,6]))
-test_neighbor_distances(KagomeLattice([4,6], diagm([0,0])))
+test_neighbor_distances(KagomeLattice([4,6], Diagonal([0,0])))

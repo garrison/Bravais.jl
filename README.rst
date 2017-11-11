@@ -52,7 +52,7 @@ Lattice construction is fairly simple.  Some examples below.
 
 A 1D chain with open boundary conditions::
 
-  ChainLattice([12], diagm([0]))
+  ChainLattice([12], Diagonal([0]))
 
 A 1D chain with periodic boundary conditions::
 
@@ -60,7 +60,7 @@ A 1D chain with periodic boundary conditions::
 
 A 2D square lattice on a "cylinder"::
 
-  SquareLattice([12,4], diagm([12,0]))
+  SquareLattice([12,4], Diagonal([12,0]))
 
 A 2D triangular (aka hexagonal) lattice with PBC::
 
