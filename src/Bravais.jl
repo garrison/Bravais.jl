@@ -760,6 +760,8 @@ export
     twist,
     repeater,
     ishelical,
+    primvecs,
+    recivecs,
     nmomenta,
     eachmomentumindex,
     momentum,

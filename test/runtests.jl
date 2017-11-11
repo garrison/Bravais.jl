@@ -79,6 +79,7 @@ for lattice in lattices
 
     len = @inferred length(lattice)
     @test size(lattice) == (len,)
+    @test eachindex(lattice) == 1:len
 
     @test_throws BoundsError lattice[0]
     @test_throws BoundsError lattice[len+1]
@@ -154,6 +155,8 @@ for lattice in lattices
     if !isbravais(lattice)
         continue
     end
+
+    @test primvecs(lattice).' * recivecs(lattice) ≈ 2π * eye(ndimensions(lattice))
 
     # Check the momenta across the boundary conditions
     n_k_idx = @inferred nmomenta(lattice)
