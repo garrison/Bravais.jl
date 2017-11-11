@@ -519,7 +519,7 @@ function siteneighbors(f, lattice::ChainLattice, ridx::Integer, ::Type{Val{1}})
     M = lattice.lattice.M
     mc = maxcoords(lattice)
     site = lattice[ridx]
-    newsite = [site[1] + 1]
+    newsite = @SVector [site[1] + 1]
     if M[1,1] <= 1 && newsite[1] >= mc[1]
         # Do not provide neighbors across an open boundary.
         return
@@ -533,7 +533,7 @@ function siteneighbors(f, lattice::ChainLattice, ridx::Integer, ::Type{Val{N}}) 
     M = lattice.lattice.M
     mc = maxcoords(lattice)
     site = lattice[ridx]
-    newsite = [site[1] + N]
+    newsite = @SVector [site[1] + N]
     if M[1,1] <= 1 && newsite[1] >= mc[1]
         # Do not provide neighbors across an open boundary.
         return
