@@ -183,18 +183,19 @@ Base.eachindex(lattice::AbstractLattice) = Base.OneTo(length(lattice))
 
 Base.size(lattice::AbstractLattice) = (length(lattice),)
 
-function Base.getindex(lattice::AbstractLattice, index::Integer)
+function Base.getindex(lattice::Union{AbstractBravaisLattice{Dprime},AbstractLatticeWithBasis{D,Dprime} where D}, index::Integer) where {Dprime}
     checkbounds(lattice, index)
     # Alternatively: return [rowmajor_ind2sub(tuple(maxcoords(lattice)...), index)...] - 1
     strides = _strides(lattice)
-    rv = Array{Int}(length(strides))
+    @assert length(strides) == Dprime
+    rv = MVector{Dprime,Int}()
     r = index - 1
-    for i in 1:length(strides)-1
+    for i in 1:Dprime-1
         d, r = divrem(r, strides[i])
         rv[i] = d
     end
     rv[end] = r
-    return rv
+    return SVector(rv)
 end
 
 function Base.in(site::AbstractVector{Int}, lattice::AbstractLattice)
@@ -208,7 +209,9 @@ end
 
 Base.findfirst(lattice::AbstractLattice, site::AbstractVector{Int}) = site ∉ lattice ? 0 : dot(site, _strides(lattice)) + 1
 
-Base.start(lattice::AbstractLattice) = zeros(Int, length(maxcoords(lattice)))
+function Base.start(lattice::Union{AbstractBravaisLattice{Dprime},AbstractLatticeWithBasis{D,Dprime} where D}) where {Dprime}
+    zeros(SVector{Dprime,Int})
+end
 
 function Base.done(lattice::AbstractLattice, site::AbstractVector{Int})
     mc = maxcoords(lattice)
@@ -219,21 +222,21 @@ function Base.done(lattice::AbstractLattice, site::AbstractVector{Int})
     return false
 end
 
-function Base.next(lattice::AbstractLattice, site::AbstractVector{Int})
-    newsite = copy(site)
+function Base.next(lattice::Union{AbstractBravaisLattice{Dprime},AbstractLatticeWithBasis{D,Dprime} where D}, site::SVector{Dprime,Int})::NTuple{2,SVector{Dprime,Int}} where {Dprime}
+    newsite = MVector{Dprime,Int}(site)
     mc = maxcoords(lattice)
     # XXX FIXME @assert something # otherwise BoundsError!
-    @assert length(mc) >= 1
-    for i in length(mc):-1:2
+    @assert length(mc) == Dprime >= 1
+    for i in Dprime:-1:2
         newsite[i] += 1
         if newsite[i] == mc[i]
             newsite[i] = 0
         else
-            return site, newsite
+            return site, SVector(newsite)
         end
     end
     newsite[1] += 1
-    return site, newsite
+    return site, SVector(newsite)
 end
 
 # FIXME: can we return readonly array views/proxies of some of the
@@ -358,7 +361,7 @@ wraparound_site!(lattice::WrappedLatticeUnion, site::AbstractVector{Int}) = wrap
 
 function wraparound_site(lattice::Union{AbstractBravaisLattice{Dprime},AbstractLatticeWithBasis{D,Dprime} where D}, site::AbstractVector{Int}) where {Dprime}
     site_, wrap = wraparound_site!(lattice, copy(MVector{Dprime,Int}(site)))
-    return SVector{Dprime,Int}(site_), wrap
+    return SVector(site_), wrap
 end
 
 wraparound_site(lattice::AbstractLattice, index::Integer) = wraparound_site(lattice, lattice[index])
@@ -383,7 +386,11 @@ function translate_site!(lattice::AbstractLattice, site::AbstractVector{Int}, di
     return wraparound_site!(lattice, site)
 end
 
-translate_site(lattice::AbstractLattice, site::AbstractVector{Int}, direction::Integer) = translate_site!(lattice, copy(site), direction)
+function translate_site(lattice::Union{AbstractBravaisLattice{Dprime},AbstractLatticeWithBasis{D,Dprime} where D}, site::AbstractVector{Int}, direction::Integer) where {Dprime}
+    site_, wrap = translate_site!(lattice, copy(MVector{Dprime,Int}(site)), direction)
+    return SVector(site_), wrap
+end
+
 translate_site(lattice::AbstractLattice, index::Integer, direction::Integer) = translate_site(lattice, lattice[index], direction)
 
 function translate(lattice::AbstractLattice, site_or_index::Union{AbstractVector{Int}, Integer}, direction::Integer)
@@ -543,7 +550,7 @@ function siteneighbors(f, lattice::HypercubicLattice{D}, ridx::Integer, ::Type{V
     site = lattice[ridx]
 
     for i in 1:D
-        newsite = copy(site)
+        newsite = MVector(site)
         newsite[i] += 1
         if M[i,i] <= 1 && newsite[i] >= mc[i]
             # In directions w/ OBC or length one, do not provide the neighbors!
