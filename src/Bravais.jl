@@ -360,7 +360,7 @@ end
 wraparound_site!(lattice::WrappedLatticeUnion, site::AbstractVector{Int}) = wraparound_site!(lattice.lattice, site)
 
 function wraparound_site(lattice::Union{AbstractBravaisLattice{Dprime},AbstractLatticeWithBasis{D,Dprime} where D}, site::AbstractVector{Int}) where {Dprime}
-    site_, wrap = wraparound_site!(lattice, copy(MVector{Dprime,Int}(site)))
+    site_, wrap = wraparound_site!(lattice, MVector{Dprime,Int}(site))
     return SVector(site_), wrap
 end
 
@@ -387,7 +387,7 @@ function translate_site!(lattice::AbstractLattice, site::AbstractVector{Int}, di
 end
 
 function translate_site(lattice::Union{AbstractBravaisLattice{Dprime},AbstractLatticeWithBasis{D,Dprime} where D}, site::AbstractVector{Int}, direction::Integer) where {Dprime}
-    site_, wrap = translate_site!(lattice, copy(MVector{Dprime,Int}(site)), direction)
+    site_, wrap = translate_site!(lattice, MVector{Dprime,Int}(site), direction)
     return SVector(site_), wrap
 end
 
