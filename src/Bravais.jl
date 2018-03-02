@@ -18,6 +18,7 @@ __precompile__()
 module Bravais
 
 using StaticArrays
+using Compat.LinearAlgebra
 
 include("delegate.jl")
 
@@ -28,7 +29,7 @@ include("delegate.jl")
 # Also, once julia easily supports it we can speed up ind2sub by
 # precomputing some "magic numbers" for given lattice dimensions (see
 # https://github.com/JuliaLang/julia/issues/8188#issuecomment-56763806).
-rowmajor_ind2sub(dims, index) = reverse(ind2sub(reverse(dims), index))
+rowmajor_ind2sub(dims, index) = reverse(convert(Tuple, ind2sub(reverse(dims), index)))
 
 abstract type AbstractSiteNetwork <: AbstractVector{Vector{Int}} end
 abstract type AbstractLattice{D} <: AbstractSiteNetwork end

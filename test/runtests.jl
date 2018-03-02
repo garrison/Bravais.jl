@@ -1,7 +1,8 @@
 using Bravais
-using Base.Test
+using Compat.Test
 
 import StaticArrays
+using Compat.LinearAlgebra
 
 debug = false
 
