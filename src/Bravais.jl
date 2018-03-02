@@ -162,7 +162,7 @@ end
 isbravais(::AbstractBravaisLattice) = true
 isbravais(::AbstractLatticeWithBasis) = false
 
-@doc doc"Returns the underlying Bravais lattice" ->
+"Return the underlying Bravais lattice"
 bravais(lattice::AbstractBravaisLattice) = lattice
 bravais(lattice::LatticeWithBasis) = lattice.bravaislattice
 bravais(lattice::WrappedLatticeWithBasis) = bravais(lattice.lattice)
@@ -263,10 +263,10 @@ ishelical(lattice::AbstractLattice) = !isdiag(repeater(lattice))
 # lattices only.  If one wants to query them for a lattice with a
 # basis, call e.g. primvecs(bravais(lattice)).
 
-@doc doc"Returns the primitive vectors of the direct lattice" ->
+"Return the primitive vectors of the direct lattice"
 primvecs(lattice::BravaisLattice) = lattice.a
 
-@doc doc"Returns the primitive vectors of the reciprocal lattice" ->
+"Return the primitive vectors of the reciprocal lattice"
 recivecs(lattice::BravaisLattice) = lattice.b
 
 nmomenta(lattice::BravaisLattice) = length(lattice.momenta)
@@ -712,12 +712,12 @@ end
 
 #= Begin cache objects =#
 
-@doc doc"""
+"""
 Precomputes the results of the translateη function on each site.
 
 ltrc = LatticeTranslationCache(lattice, direction)
 translateη(ltrc, site)
-""" ->
+"""
 struct LatticeTranslationCache{LatticeType<:AbstractLattice}
     lattice::LatticeType
     direction::Int
