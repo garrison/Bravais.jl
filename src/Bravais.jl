@@ -208,7 +208,13 @@ function Base.in(site::AbstractVector{Int}, lattice::AbstractLattice)
     return true
 end
 
-Base.findfirst(lattice::AbstractLattice, site::AbstractVector{Int}) = site ∉ lattice ? 0 : dot(site, _strides(lattice)) + 1
+@static if VERSION >= v"0.7.0-DEV.3272"
+    const nothing_sentinel = nothing
+else
+    const nothing_sentinel = 0
+end
+
+Base.findfirst(lattice::AbstractLattice, site::AbstractVector{Int}) = site ∉ lattice ? nothing_sentinel : dot(site, _strides(lattice)) + 1
 
 function Base.start(lattice::Union{AbstractBravaisLattice{Dprime},AbstractLatticeWithBasis{D,Dprime} where D}) where {Dprime}
     zeros(SVector{Dprime,Int})
@@ -369,7 +375,7 @@ wraparound_site(lattice::AbstractLattice, index::Integer) = wraparound_site(latt
 
 function wraparound(lattice::AbstractLattice, site_or_index::Union{AbstractVector{Int}, Integer})
     site, wrap = wraparound_site(lattice, site_or_index)
-    idx = findfirst(lattice, site)
+    idx = findfirst(lattice, site)::Int
     return idx, wrap
 end
 
@@ -396,7 +402,7 @@ translate_site(lattice::AbstractLattice, index::Integer, direction::Integer) = t
 
 function translate(lattice::AbstractLattice, site_or_index::Union{AbstractVector{Int}, Integer}, direction::Integer)
     site, wrap = translate_site(lattice, site_or_index, direction)
-    idx = findfirst(lattice, site)
+    idx = findfirst(lattice, site)::Int
     return idx, wrap
 end
 
@@ -736,7 +742,7 @@ struct LatticeTranslationCache{LatticeType<:AbstractLattice}
 end
 
 translateη(ltrc::LatticeTranslationCache, j::Integer) = ltrc.cache[j]
-translateη(ltrc::LatticeTranslationCache, site::AbstractVector{Int}) = translateη(ltrc, findfirst(ltrc.lattice, site))
+translateη(ltrc::LatticeTranslationCache, site::AbstractVector{Int}) = translateη(ltrc, findfirst(ltrc.lattice, site)::Int)
 
 #= End cache objects =#
 

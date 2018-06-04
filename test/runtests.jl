@@ -85,7 +85,9 @@ for lattice in lattices
     @test_throws BoundsError lattice[0]
     @test_throws BoundsError lattice[len+1]
 
-    @test @inferred(findfirst(lattice, maxcoords(lattice))) == 0
+    # FIXME: test that findfirst inferred type is correct, Union{Nothing,Int}
+    # on julia 0.7 and higher
+    @test findfirst(lattice, maxcoords(lattice)) == Bravais.nothing_sentinel
     @inferred(in(@inferred(getindex(lattice, 1)),lattice))
 
     last = false
