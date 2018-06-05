@@ -6,19 +6,21 @@ using Compat.LinearAlgebra
 
 debug = false
 
-lattice = BravaisLattice{3}([4,6,8])
-@test length(lattice) == 4*6*8
-@test size(lattice) == (4*6*8,)
+let lattice = BravaisLattice{3}([4,6,8])
+    @test length(lattice) == 4*6*8
+    @test size(lattice) == (4*6*8,)
 
-# NOTE: assumes hypercubic by default, but BravaisLattice does not
-# define any concept of nearest neighbors
-@test realspace(lattice, [1,4,3]) == [1,4,3]
+    # NOTE: assumes hypercubic by default, but BravaisLattice does not
+    # define any concept of nearest neighbors
+    @test realspace(lattice, [1,4,3]) == [1,4,3]
+end
 
-lattice = TriangularLattice([4,6])
-@test length(lattice) == 4*6
-@test realspace(lattice, [1,0]) == [1.0, 0]
-@test realspace(lattice, [0,1]) == [0.5, sqrt(3)/2]
-@test realspace(lattice, 7) == [1.0, 0]
+let lattice = TriangularLattice([4,6])
+    @test length(lattice) == 4*6
+    @test realspace(lattice, [1,0]) == [1.0, 0]
+    @test realspace(lattice, [0,1]) == [0.5, sqrt(3)/2]
+    @test realspace(lattice, 7) == [1.0, 0]
+end
 
 @test length(BravaisLattice(StaticArrays.@SVector [4,6])) == 4*6
 @test length(HypercubicLattice{4}([4,6,8,10])) == 4*6*8*10
@@ -196,20 +198,22 @@ for lattice in lattices
     end
 end
 
-lattice = KagomeLattice([2,3])
-# try a valid wraparound
-@inferred wraparound(lattice, [4,0,0])
-# invalid basis index
-@test_throws ArgumentError wraparound(lattice, [4,0,3])
-# attempt to "translate" in direction of the basis index
-@test_throws ArgumentError translateη(lattice, 1, 3)
+let lattice = KagomeLattice([2,3])
+    # try a valid wraparound
+    @inferred wraparound(lattice, [4,0,0])
+    # invalid basis index
+    @test_throws ArgumentError wraparound(lattice, [4,0,3])
+    # attempt to "translate" in direction of the basis index
+    @test_throws ArgumentError translateη(lattice, 1, 3)
+end
 
 # Invalid wraparound for OBC
-lattice = ChainLattice([8], Diagonal([0]))
-@inferred wraparound(lattice, [0])
-@inferred wraparound(lattice, [7])
-@test_throws ArgumentError wraparound(lattice, [19])
-@test_throws ArgumentError wraparound(lattice, [-1])
+let lattice = ChainLattice([8], Diagonal([0]))
+    @inferred wraparound(lattice, [0])
+    @inferred wraparound(lattice, [7])
+    @test_throws ArgumentError wraparound(lattice, [19])
+    @test_throws ArgumentError wraparound(lattice, [-1])
+end
 
 function test_neighbors(lattice, pairs, neigh=Val{1})
     mypairs = Set(pairs)
@@ -404,87 +408,99 @@ end
 @test !isbipartite(SquareLattice([4,1])) # if two dimensions are specified, we don't consider this bipartite.
 @test !istripartite(SquareLattice([4,4]))
 
-lattice = SquareLattice([4, 3], Diagonal([4,0]))
-test_neighbor_sublattices(lattice, [0,1])
-@test sublattice_index(lattice, 1) == 0
-@test sublattice_index(lattice, 2) == 1
-@test sublattice_index(lattice, 3) == 0
-@test sublattice_index(lattice, 4) == 1
-@test sublattice_index(lattice, 5) == 0
-@test sublattice_index(lattice, 6) == 1
-@test sublattice_index(lattice, 7) == 0
-@test sublattice_index(lattice, 8) == 1
-@test sublattice_index(lattice, 9) == 0
-@test sublattice_index(lattice, 10) == 1
-@test sublattice_index(lattice, 11) == 0
-@test sublattice_index(lattice, 12) == 1
-
-lattice = SquareLattice([4, 3])
-@test_throws ArgumentError sublattice_index(lattice, 1)
-
-lattice = SquareLattice([4, 2])
-test_neighbor_sublattices(lattice, [0,1])
-@test sublattice_index(lattice, 1) == 0
-@test sublattice_index(lattice, 2) == 1
-@test sublattice_index(lattice, 3) == 1
-@test sublattice_index(lattice, 4) == 0
-@test sublattice_index(lattice, 5) == 0
-@test sublattice_index(lattice, 6) == 1
-@test sublattice_index(lattice, 7) == 1
-@test sublattice_index(lattice, 8) == 0
-
-lattice = ChainLattice([6])
-test_neighbor_sublattices(lattice, [0,1])
-@test sublattice_index(lattice, 1) == 0
-@test sublattice_index(lattice, 2) == 1
-@test sublattice_index(lattice, 3) == 0
-@test sublattice_index(lattice, 4) == 1
-@test sublattice_index(lattice, 5) == 0
-@test sublattice_index(lattice, 6) == 1
-
-lattice = SquareLattice([6,1])
-@test_throws ArgumentError sublattice_index(lattice, 1)
-
-lattice = TriangularLattice([3,3])
-@test !isbipartite(lattice)
-@test istripartite(lattice)
-lattice = TriangularLattice([4,3])
-@test !isbipartite(lattice)
-@test !istripartite(lattice)
-@test_throws ArgumentError sublattice_index(lattice, 1)
-lattice = TriangularLattice([4,3], Diagonal([0,3]))
-@test !isbipartite(lattice)
-@test istripartite(lattice)
-lattice = TriangularLattice([4,3], Diagonal([0,0]))
-@test !isbipartite(lattice)
-@test istripartite(lattice)
-
-lattice = TriangularLattice([3,3])
-test_neighbor_sublattices(lattice, [0,1,2])
-@test sublattice_index(lattice, 1) == 0
-@test sublattice_index(lattice, 2) == 1
-@test sublattice_index(lattice, 3) == 2
-@test sublattice_index(lattice, 4) == 2
-@test sublattice_index(lattice, 5) == 0
-@test sublattice_index(lattice, 6) == 1
-@test sublattice_index(lattice, 7) == 1
-@test sublattice_index(lattice, 8) == 2
-@test sublattice_index(lattice, 9) == 0
-
-lattice = HoneycombLattice([5,5])
-@test isbipartite(lattice)
-@test !istripartite(lattice)
-test_neighbor_sublattices(lattice, [0,1])
-for (i, site) in enumerate(lattice)
-    @test sublattice_index(lattice, i) == sublattice_index(lattice, site) == site[end] == ((i ⊻ 1) & 1)
+let lattice = SquareLattice([4, 3], Diagonal([4,0]))
+    test_neighbor_sublattices(lattice, [0,1])
+    @test sublattice_index(lattice, 1) == 0
+    @test sublattice_index(lattice, 2) == 1
+    @test sublattice_index(lattice, 3) == 0
+    @test sublattice_index(lattice, 4) == 1
+    @test sublattice_index(lattice, 5) == 0
+    @test sublattice_index(lattice, 6) == 1
+    @test sublattice_index(lattice, 7) == 0
+    @test sublattice_index(lattice, 8) == 1
+    @test sublattice_index(lattice, 9) == 0
+    @test sublattice_index(lattice, 10) == 1
+    @test sublattice_index(lattice, 11) == 0
+    @test sublattice_index(lattice, 12) == 1
 end
 
-lattice = KagomeLattice([4,3])
-@test !isbipartite(lattice)
-@test istripartite(lattice)
-test_neighbor_sublattices(lattice, [0,1,2])
-for (i, site) in enumerate(lattice)
-    @test sublattice_index(lattice, i) == sublattice_index(lattice, site) == site[end]
+let lattice = SquareLattice([4, 3])
+    @test_throws ArgumentError sublattice_index(lattice, 1)
+end
+
+let lattice = SquareLattice([4, 2])
+    test_neighbor_sublattices(lattice, [0,1])
+    @test sublattice_index(lattice, 1) == 0
+    @test sublattice_index(lattice, 2) == 1
+    @test sublattice_index(lattice, 3) == 1
+    @test sublattice_index(lattice, 4) == 0
+    @test sublattice_index(lattice, 5) == 0
+    @test sublattice_index(lattice, 6) == 1
+    @test sublattice_index(lattice, 7) == 1
+    @test sublattice_index(lattice, 8) == 0
+end
+
+let lattice = ChainLattice([6])
+    test_neighbor_sublattices(lattice, [0,1])
+    @test sublattice_index(lattice, 1) == 0
+    @test sublattice_index(lattice, 2) == 1
+    @test sublattice_index(lattice, 3) == 0
+    @test sublattice_index(lattice, 4) == 1
+    @test sublattice_index(lattice, 5) == 0
+    @test sublattice_index(lattice, 6) == 1
+end
+
+let lattice = SquareLattice([6,1])
+    @test_throws ArgumentError sublattice_index(lattice, 1)
+end
+
+let lattice = TriangularLattice([3,3])
+    @test !isbipartite(lattice)
+    @test istripartite(lattice)
+end
+let lattice = TriangularLattice([4,3])
+    @test !isbipartite(lattice)
+    @test !istripartite(lattice)
+    @test_throws ArgumentError sublattice_index(lattice, 1)
+end
+let lattice = TriangularLattice([4,3], Diagonal([0,3]))
+    @test !isbipartite(lattice)
+    @test istripartite(lattice)
+end
+let lattice = TriangularLattice([4,3], Diagonal([0,0]))
+    @test !isbipartite(lattice)
+    @test istripartite(lattice)
+end
+
+let lattice = TriangularLattice([3,3])
+    test_neighbor_sublattices(lattice, [0,1,2])
+    @test sublattice_index(lattice, 1) == 0
+    @test sublattice_index(lattice, 2) == 1
+    @test sublattice_index(lattice, 3) == 2
+    @test sublattice_index(lattice, 4) == 2
+    @test sublattice_index(lattice, 5) == 0
+    @test sublattice_index(lattice, 6) == 1
+    @test sublattice_index(lattice, 7) == 1
+    @test sublattice_index(lattice, 8) == 2
+    @test sublattice_index(lattice, 9) == 0
+end
+
+let lattice = HoneycombLattice([5,5])
+    @test isbipartite(lattice)
+    @test !istripartite(lattice)
+    test_neighbor_sublattices(lattice, [0,1])
+    for (i, site) in enumerate(lattice)
+        @test sublattice_index(lattice, i) == sublattice_index(lattice, site) == site[end] == ((i ⊻ 1) & 1)
+    end
+end
+
+let lattice = KagomeLattice([4,3])
+    @test !isbipartite(lattice)
+    @test istripartite(lattice)
+    test_neighbor_sublattices(lattice, [0,1,2])
+    for (i, site) in enumerate(lattice)
+        @test sublattice_index(lattice, i) == sublattice_index(lattice, site) == site[end]
+    end
 end
 
 function test_neighbor_distances(lattice, neigh=Val{1}, expected_squared=1)
