@@ -590,7 +590,7 @@ struct TriangularLattice <: WrappedBravaisLattice{2}
     function TriangularLattice(N::AbstractVector{Int},
                                M::AbstractMatrix{Int}=Diagonal(N), # assumes pbc
                                η::AbstractVector{Rational{Int}}=zeros(SVector{2,Rational{Int}}))
-        a = @SMatrix([1.0 0; 0.5 sqrt(3)/2]).'
+        a = copy(transpose(@SMatrix([1.0 0; 0.5 sqrt(3)/2])))
         bravaislattice = BravaisLattice{2,4}(N, M, η, a)
         tripartite = true
         for i in 1:2
@@ -656,7 +656,7 @@ struct HoneycombLattice <: WrappedLatticeWithBasis{2,3}
     function HoneycombLattice(N::AbstractVector{Int},
                               M::AbstractMatrix{Int}=Diagonal(N), # assumes pbc
                               η::AbstractVector{Rational{Int}}=zeros(SVector{2,Rational{Int}}))
-        a = @SMatrix([1.5 sqrt(3)/2; 0 sqrt(3)]).'
+        a = copy(transpose(@SMatrix([1.5 sqrt(3)/2; 0 sqrt(3)])))
         basis = [@SVector([0.0, 0]), @SVector([1.0, 0])]
         return new(LatticeWithBasis{2,4,3}(N, M, η, a, basis))
     end
@@ -690,7 +690,7 @@ struct KagomeLattice <: WrappedLatticeWithBasis{2,3}
     function KagomeLattice(N::AbstractVector{Int},
                            M::AbstractMatrix{Int}=Diagonal(N), # assumes pbc
                            η::AbstractVector{Rational{Int}}=zeros(SVector{2,Rational{Int}}))
-        a = @SMatrix([2 0; 1 sqrt(3)]).'
+        a = copy(transpose(@SMatrix([2 0; 1 sqrt(3)])))
         basis = [@SVector([0.0, 0]), @SVector([0.5, √3/2]), @SVector([1.0, 0])]
         return new(LatticeWithBasis{2,4,3}(N, M, η, a, basis))
     end

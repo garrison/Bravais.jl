@@ -161,7 +161,7 @@ for lattice in lattices
         continue
     end
 
-    @test primvecs(lattice).' * recivecs(lattice) ≈ Matrix(2π * I, ndimensions(lattice), ndimensions(lattice))
+    @test transpose(primvecs(lattice)) * recivecs(lattice) ≈ Matrix(2π * I, ndimensions(lattice), ndimensions(lattice))
 
     # Check the momenta across the boundary conditions
     n_k_idx = @inferred nmomenta(lattice)
