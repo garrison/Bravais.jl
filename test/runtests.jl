@@ -89,7 +89,7 @@ for lattice in lattices
 
     # FIXME: test that findfirst inferred type is correct, Union{Nothing,Int}
     # on julia 0.7 and higher
-    @test findfirst(lattice, maxcoords(lattice)) == Bravais.nothing_sentinel
+    @test findfirst(isequal(maxcoords(lattice)), lattice) == Bravais.nothing_sentinel
     @inferred(in(@inferred(getindex(lattice, 1)),lattice))
 
     last = false
@@ -97,7 +97,7 @@ for lattice in lattices
         checkbounds(lattice, i)
         @test lattice[i] == site
         @test site in lattice
-        @test findfirst(lattice, site) == i
+        @test findfirst(isequal(site), lattice) == i
         @test last == false
         if i == length(lattice)
             last = true
