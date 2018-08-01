@@ -13,7 +13,7 @@
 # FIXME: in lattice w/ basis, be sure to error out anytime the "basis
 # index" is out of range
 
-__precompile__()
+VERSION < v"0.7.0-beta2.199" && __precompile__()
 
 module Bravais
 
