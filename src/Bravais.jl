@@ -62,7 +62,7 @@ struct BravaisLattice{D,Dsq} <: AbstractBravaisLattice{D}
     function BravaisLattice{D,Dsq}(N::AbstractVector{Int},
                                    M::AbstractMatrix{Int}=Diagonal(N), # assumes pbc
                                    η::AbstractVector{Rational{Int}}=zeros(SVector{D,Rational{Int}}),
-                                   a::AbstractMatrix{Float64}=eye(SMatrix{D,D})) where {D,Dsq}
+                                   a::AbstractMatrix{Float64}=(@static if VERSION >= v"0.7-" SMatrix{D,D}(1.0I) else eye(SMatrix{D,D}) end)) where {D,Dsq}
         @assert Dsq == D * D
 
         # check N
@@ -140,7 +140,7 @@ struct LatticeWithBasis{D,Dsq,Dp1} <: AbstractLatticeWithBasis{D,Dp1}
     function LatticeWithBasis{D,Dsq,Dp1}(N::AbstractVector{Int},
                                          M::AbstractMatrix{Int}=Diagonal(N), # assumes pbc
                                          η::AbstractVector{Rational{Int}}=zeros(SVector{D,Rational{Int}}),
-                                         a::AbstractMatrix{Float64}=eye(SMatrix{D,D}),
+                                         a::AbstractMatrix{Float64}=(@static if VERSION >= v"0.7-" SMatrix{D,D}(1.0I) else eye(SMatrix{D,D}) end),
                                          basis::Vector{SVector{D,Float64}}=[zeros(SVector{D,Float64})]) where {D,Dsq,Dp1}
         @assert Dp1 == D + 1
         bravaislattice = BravaisLattice{D,Dsq}(N, M, η, a)
@@ -195,7 +195,11 @@ function Base.getindex(lattice::Union{AbstractBravaisLattice{Dprime},AbstractLat
     # Alternatively: return [rowmajor_ind2sub(tuple(maxcoords(lattice)...), index)...] - 1
     strides = _strides(lattice)
     @assert length(strides) == Dprime
-    rv = MVector{Dprime,Int}()
+    rv = @static if VERSION >= v"0.7-"
+        MVector{Dprime,Int}(Compat.undef)
+    else
+        MVector{Dprime,Int}()
+    end
     r = index - 1
     for i in 1:Dprime-1
         d, r = divrem(r, strides[i])
