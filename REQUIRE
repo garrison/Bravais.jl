@@ -1,3 +1,2 @@
-julia 0.6
-Compat
+julia 0.7-rc2
 StaticArrays 0.6.5

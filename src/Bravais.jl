@@ -13,14 +13,10 @@
 # FIXME: in lattice w/ basis, be sure to error out anytime the "basis
 # index" is out of range
 
-VERSION < v"0.7.0-beta2.199" && __precompile__()
-
 module Bravais
 
-import Compat
-
 using StaticArrays
-using Compat.LinearAlgebra
+using LinearAlgebra
 
 include("delegate.jl")
 
@@ -31,11 +27,7 @@ include("delegate.jl")
 # Also, once julia easily supports it we can speed up ind2sub by
 # precomputing some "magic numbers" for given lattice dimensions (see
 # https://github.com/JuliaLang/julia/issues/8188#issuecomment-56763806).
-@static if VERSION >= v"0.7-"
-    rowmajor_ind2sub(dims, index) = reverse(Tuple(CartesianIndices(reverse(dims))[index]))
-else
-    rowmajor_ind2sub(dims, index) = reverse(convert(Tuple, ind2sub(reverse(dims), index)))
-end
+rowmajor_ind2sub(dims, index) = reverse(Tuple(CartesianIndices(reverse(dims))[index]))
 
 abstract type AbstractSiteNetwork <: AbstractVector{Vector{Int}} end
 abstract type AbstractLattice{D} <: AbstractSiteNetwork end
@@ -62,7 +54,7 @@ struct BravaisLattice{D,Dsq} <: AbstractBravaisLattice{D}
     function BravaisLattice{D,Dsq}(N::AbstractVector{Int},
                                    M::AbstractMatrix{Int}=Diagonal(N), # assumes pbc
                                    η::AbstractVector{Rational{Int}}=zeros(SVector{D,Rational{Int}}),
-                                   a::AbstractMatrix{Float64}=(@static if VERSION >= v"0.7-" SMatrix{D,D}(1.0I) else eye(SMatrix{D,D}) end)) where {D,Dsq}
+                                   a::AbstractMatrix{Float64}=SMatrix{D,D}(1.0I)) where {D,Dsq}
         @assert Dsq == D * D
 
         # check N
@@ -140,7 +132,7 @@ struct LatticeWithBasis{D,Dsq,Dp1} <: AbstractLatticeWithBasis{D,Dp1}
     function LatticeWithBasis{D,Dsq,Dp1}(N::AbstractVector{Int},
                                          M::AbstractMatrix{Int}=Diagonal(N), # assumes pbc
                                          η::AbstractVector{Rational{Int}}=zeros(SVector{D,Rational{Int}}),
-                                         a::AbstractMatrix{Float64}=(@static if VERSION >= v"0.7-" SMatrix{D,D}(1.0I) else eye(SMatrix{D,D}) end),
+                                         a::AbstractMatrix{Float64}=SMatrix{D,D}(1.0I),
                                          basis::Vector{SVector{D,Float64}}=[zeros(SVector{D,Float64})]) where {D,Dsq,Dp1}
         @assert Dp1 == D + 1
         bravaislattice = BravaisLattice{D,Dsq}(N, M, η, a)
@@ -195,11 +187,7 @@ function Base.getindex(lattice::Union{AbstractBravaisLattice{Dprime},AbstractLat
     # Alternatively: return [rowmajor_ind2sub(tuple(maxcoords(lattice)...), index)...] - 1
     strides = _strides(lattice)
     @assert length(strides) == Dprime
-    rv = @static if VERSION >= v"0.7-"
-        MVector{Dprime,Int}(Compat.undef)
-    else
-        MVector{Dprime,Int}()
-    end
+    rv = MVector{Dprime,Int}(undef)
     r = index - 1
     for i in 1:Dprime-1
         d, r = divrem(r, strides[i])
@@ -218,17 +206,11 @@ function Base.in(site::AbstractVector{Int}, lattice::AbstractLattice)
     return true
 end
 
-@static if VERSION >= v"0.7.0-DEV.3272"
-    const nothing_sentinel = nothing
-else
-    const nothing_sentinel = 0
-end
-
-EqualTo = Compat.Fix2{typeof(isequal)}
+EqualTo = Base.Fix2{typeof(isequal)}
 
 function Base.findfirst(p::EqualTo{<:AbstractVector{Int}}, lattice::AbstractLattice)
     let site = p.x
-        site ∉ lattice ? nothing_sentinel : dot(site, _strides(lattice)) + 1
+        site ∉ lattice ? nothing : dot(site, _strides(lattice)) + 1
     end
 end
 

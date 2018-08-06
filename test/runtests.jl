@@ -1,8 +1,8 @@
 using Bravais
-using Compat.Test
+using Test
 
 import StaticArrays
-using Compat.LinearAlgebra
+using LinearAlgebra
 
 debug = false
 
@@ -89,7 +89,7 @@ for lattice in lattices
 
     # FIXME: test that findfirst inferred type is correct, Union{Nothing,Int}
     # on julia 0.7 and higher
-    @test findfirst(isequal(maxcoords(lattice)), lattice) == Bravais.nothing_sentinel
+    @test findfirst(isequal(maxcoords(lattice)), lattice) === nothing
     @inferred(in(@inferred(getindex(lattice, 1)),lattice))
 
     last = false

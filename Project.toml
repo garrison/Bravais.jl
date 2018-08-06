@@ -3,5 +3,5 @@ uuid = "a63ae028-67b0-11e8-27d3-0b265754b156"
 version = "0.0.0"
 
 [deps]
-Compat = "34da2185-b29b-5c13-b0c7-acf172513d20"
+LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
