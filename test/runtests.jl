@@ -22,7 +22,7 @@ let lattice = TriangularLattice([4,6])
     @test realspace(lattice, 7) == [1.0, 0]
 end
 
-@test length(BravaisLattice(StaticArrays.@SVector [4,6])) == 4*6
+@test length(BravaisLattice(StaticArrays.@SVector[4,6])) == 4*6
 @test length(HypercubicLattice{4}([4,6,8,10])) == 4*6*8*10
 @test length(TriangularLattice([4,6])) == 4*6
 @test length(HoneycombLattice([3,5])) == 3*5*2
@@ -34,7 +34,7 @@ end
 lattices = Any[
     "Basic BravaisLattice",
     @inferred(BravaisLattice{2}([4,6])),
-    @inferred(BravaisLattice(StaticArrays.@SVector [4,6])),
+    @inferred(BravaisLattice(StaticArrays.@SVector[4,6])),
 
     "1D and effectively 1D",
     @inferred(ChainLattice([8])),
@@ -63,7 +63,7 @@ lattices = Any[
     "3D like",
     @inferred(CubicLattice([4,2,6])),
     @inferred(HypercubicLattice{4}([4,2,6,1])),
-    @inferred(HypercubicLattice(StaticArrays.@MVector [4,2,6,1])),
+    @inferred(HypercubicLattice(StaticArrays.@MVector[4,2,6,1])),
 
     "3D open twisted helix",
     @inferred(CubicLattice([4,6,8], [4 0 0; 0 6 0; 1 0 8], [1//7, 0//1, 3//13])),

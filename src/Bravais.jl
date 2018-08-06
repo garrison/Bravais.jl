@@ -527,7 +527,7 @@ function siteneighbors(f, lattice::ChainLattice, ridx::Integer, ::Type{Val{1}})
     M = lattice.lattice.M
     mc = maxcoords(lattice)
     site = lattice[ridx]
-    newsite = @SVector [site[1] + 1]
+    newsite = @SVector[site[1] + 1]
     if M[1,1] <= 1 && newsite[1] >= mc[1]
         # Do not provide neighbors across an open boundary.
         return
@@ -541,7 +541,7 @@ function siteneighbors(f, lattice::ChainLattice, ridx::Integer, ::Type{Val{N}}) 
     M = lattice.lattice.M
     mc = maxcoords(lattice)
     site = lattice[ridx]
-    newsite = @SVector [site[1] + N]
+    newsite = @SVector[site[1] + N]
     if M[1,1] <= 1 && newsite[1] >= mc[1]
         # Do not provide neighbors across an open boundary.
         return
@@ -570,7 +570,7 @@ function siteneighbors(f, lattice::HypercubicLattice{D}, ridx::Integer, ::Type{V
 end
 
 function siteneighbors(f, lattice::SquareLattice, ridx::Integer, ::Type{Val{2}})
-    offsets = @SVector [@SVector([1,1]), @SVector([-1,1])]
+    offsets = @SVector[@SVector[1,1], @SVector[-1,1]]
     _siteneighbors2d(f, lattice, ridx, offsets)
 end
 
@@ -587,7 +587,7 @@ struct TriangularLattice <: WrappedBravaisLattice{2}
     function TriangularLattice(N::AbstractVector{Int},
                                M::AbstractMatrix{Int}=Diagonal(N), # assumes pbc
                                η::AbstractVector{Rational{Int}}=zeros(SVector{2,Rational{Int}}))
-        a = copy(transpose(@SMatrix([1.0 0; 0.5 sqrt(3)/2])))
+        a = copy(transpose(@SMatrix[1.0 0; 0.5 sqrt(3)/2]))
         bravaislattice = BravaisLattice{2,4}(N, M, η, a)
         tripartite = true
         for i in 1:2
@@ -619,25 +619,25 @@ end
 # FIXME: many of these neighbor functions can use special handling when the lattice height or width is 1 in a direction.  or we could just forbid this.
 
 function siteneighbors(f, lattice::TriangularLattice, ridx::Integer, ::Type{Val{1}})
-    offsets = @SVector [@SVector([1,0]), @SVector([0,1]), @SVector([-1,1])]
+    offsets = @SVector[@SVector[1,0], @SVector[0,1], @SVector[-1,1]]
     _siteneighbors2d(f, lattice, ridx, offsets)
 end
 
 function siteneighbors(f, lattice::TriangularLattice, ridx::Integer, ::Type{Val{2}})
-    offsets = @SVector [@SVector([2,-1]), @SVector([1,1]), @SVector([-1,2])]
+    offsets = @SVector[@SVector[2,-1], @SVector[1,1], @SVector[-1,2]]
     _siteneighbors2d(f, lattice, ridx, offsets)
 end
 
 function siteneighbors(f, lattice::TriangularLattice, ridx::Integer, ::Type{Val{3}})
-    offsets = @SVector [@SVector([2,0]), @SVector([0,2]), @SVector([-2,2])]
+    offsets = @SVector[@SVector[2,0], @SVector[0,2], @SVector[-2,2]]
     _siteneighbors2d(f, lattice, ridx, offsets)
 end
 
 function rhombi(lattice::TriangularLattice)
-    @SVector [
-        @SVector([@SVector([0,0]), @SVector([1,-1]), @SVector([1,0]), @SVector([0,1])]),
-        @SVector([@SVector([0,0]), @SVector([0,1]), @SVector([-1,1]), @SVector([-1,0])]),
-        @SVector([@SVector([0,0]), @SVector([-1,0]), @SVector([0,-1]), @SVector([1,-1])]),
+    @SVector[
+        @SVector[@SVector[0,0], @SVector[1,-1], @SVector[1,0], @SVector[0,1]],
+        @SVector[@SVector[0,0], @SVector[0,1], @SVector[-1,1], @SVector[-1,0]],
+        @SVector[@SVector[0,0], @SVector[-1,0], @SVector[0,-1], @SVector[1,-1]],
     ]
 end
 
@@ -653,8 +653,8 @@ struct HoneycombLattice <: WrappedLatticeWithBasis{2,3}
     function HoneycombLattice(N::AbstractVector{Int},
                               M::AbstractMatrix{Int}=Diagonal(N), # assumes pbc
                               η::AbstractVector{Rational{Int}}=zeros(SVector{2,Rational{Int}}))
-        a = copy(transpose(@SMatrix([1.5 sqrt(3)/2; 0 sqrt(3)])))
-        basis = [@SVector([0.0, 0]), @SVector([1.0, 0])]
+        a = copy(transpose(@SMatrix[1.5 sqrt(3)/2; 0 sqrt(3)]))
+        basis = [@SVector[0.0, 0], @SVector[1.0, 0]]
         return new(LatticeWithBasis{2,4,3}(N, M, η, a, basis))
     end
 end
@@ -671,12 +671,12 @@ end
 function siteneighbors(f, lattice::HoneycombLattice, ridx::Integer, ::Type{Val{1}})
     site = lattice[ridx]
     if site[end] == 0
-        offsets = @SVector [@SVector([0, 0, 1]), @SVector([-1, 0, 1]), @SVector([-1, 1, 1])]
+        offsets = @SVector[@SVector[0, 0, 1], @SVector[-1, 0, 1], @SVector[-1, 1, 1]]
         _siteneighbors2d(f, lattice, ridx, offsets)
     else
         @assert site[end] == 1
         # Commented out, otherwise we are double counting!
-        #offsets = @SVector [@SVector([0, 0, -1]), @SVector([1, 0, -1]), @SVector([1, -1, -1])]
+        #offsets = @SVector[@SVector[0, 0, -1], @SVector[1, 0, -1], @SVector[1, -1, -1]]
         #_siteneighbors2d(f, lattice, ridx, offsets)
     end
 end
@@ -687,8 +687,8 @@ struct KagomeLattice <: WrappedLatticeWithBasis{2,3}
     function KagomeLattice(N::AbstractVector{Int},
                            M::AbstractMatrix{Int}=Diagonal(N), # assumes pbc
                            η::AbstractVector{Rational{Int}}=zeros(SVector{2,Rational{Int}}))
-        a = copy(transpose(@SMatrix([2 0; 1 sqrt(3)])))
-        basis = [@SVector([0.0, 0]), @SVector([0.5, √3/2]), @SVector([1.0, 0])]
+        a = copy(transpose(@SMatrix[2 0; 1 sqrt(3)]))
+        basis = [@SVector[0.0, 0], @SVector[0.5, √3/2], @SVector[1.0, 0]]
         return new(LatticeWithBasis{2,4,3}(N, M, η, a, basis))
     end
 end
@@ -705,12 +705,12 @@ end
 function siteneighbors(f, lattice::KagomeLattice, ridx::Integer, ::Type{Val{1}})
     site = lattice[ridx]
     if site[end] == 0
-        offsets = @SVector [@SVector([0, 0, 1]), @SVector([0, -1, 1])]
+        offsets = @SVector[@SVector[0, 0, 1], @SVector[0, -1, 1]]
     elseif site[end] == 1
-        offsets = @SVector [@SVector([0, 0, 1]), @SVector([-1, 1, 1])]
+        offsets = @SVector[@SVector[0, 0, 1], @SVector[-1, 1, 1]]
     else
         @assert site[end] == 2
-        offsets = @SVector [@SVector([0, 0, -2]), @SVector([1, 0, -2])]
+        offsets = @SVector[@SVector[0, 0, -2], @SVector[1, 0, -2]]
     end
     _siteneighbors2d(f, lattice, ridx, offsets)
 end
