@@ -217,24 +217,14 @@ end
 import Base: findfirst
 @deprecate findfirst(lattice::AbstractLattice, site::AbstractVector{Int}) findfirst(isequal(site), lattice)
 
-function Base.start(lattice::Union{AbstractBravaisLattice{Dprime},AbstractLatticeWithBasis{D,Dprime} where D}) where {Dprime}
-    zeros(SVector{Dprime,Int})
-end
-
-function Base.done(lattice::AbstractLattice, site::AbstractVector{Int})
-    mc = maxcoords(lattice)
-    @assert length(site) == length(mc)
-    for i in 1:length(mc)
-        site[i] < mc[i] || return true
-    end
-    return false
-end
-
-function Base.next(lattice::Union{AbstractBravaisLattice{Dprime},AbstractLatticeWithBasis{D,Dprime} where D}, site::SVector{Dprime,Int})::NTuple{2,SVector{Dprime,Int}} where {Dprime}
+function Base.iterate(lattice::Union{AbstractBravaisLattice{Dprime},AbstractLatticeWithBasis{D,Dprime} where D}, site::SVector{Dprime,Int}=zeros(SVector{Dprime,Int}))::Union{Nothing,NTuple{2,SVector{Dprime,Int}}} where {Dprime}
     newsite = MVector{Dprime,Int}(site)
     mc = maxcoords(lattice)
     # XXX FIXME @assert something # otherwise BoundsError!
     @assert length(mc) == Dprime >= 1
+    if newsite[1] == mc[1]
+        return nothing
+    end
     for i in Dprime:-1:2
         newsite[i] += 1
         if newsite[i] == mc[i]
