@@ -87,9 +87,12 @@ for lattice in lattices
     @test_throws BoundsError lattice[0]
     @test_throws BoundsError lattice[len+1]
 
-    # FIXME: test that findfirst inferred type is correct, Union{Nothing,Int}
-    # on julia 0.7 and higher
-    @test findfirst(isequal(maxcoords(lattice)), lattice) === nothing
+    @static if VERSION >= v"1.2.0-DEV"
+        # Relies on https://github.com/JuliaLang/julia/pull/27516
+        @test @inferred(Nothing, findfirst(isequal(maxcoords(lattice)), lattice)) === nothing
+    else
+        @test findfirst(isequal(maxcoords(lattice)), lattice) === nothing
+    end
     @inferred(in(@inferred(getindex(lattice, 1)),lattice))
 
     last = false
