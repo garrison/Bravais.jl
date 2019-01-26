@@ -176,11 +176,8 @@ maxcoords(lattice::BravaisLattice) = lattice.N
 maxcoords(lattice::LatticeWithBasis) = lattice.maxcoords
 maxcoords(lattice::WrappedLatticeUnion) = maxcoords(lattice.lattice)
 
-Base.length(lattice::LatticeImplUnion) = lattice.N_tot
-
-Base.eachindex(lattice::AbstractLattice) = Base.OneTo(length(lattice))
-
-Base.size(lattice::AbstractLattice) = (length(lattice),)
+Base.size(lattice::LatticeImplUnion) = (lattice.N_tot,)
+Base.size(lattice::WrappedLatticeUnion) = size(lattice.lattice)
 
 function Base.getindex(lattice::Union{AbstractBravaisLattice{Dprime},AbstractLatticeWithBasis{D,Dprime} where D}, index::Integer) where {Dprime}
     checkbounds(lattice, index)
