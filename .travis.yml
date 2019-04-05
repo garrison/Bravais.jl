@@ -3,10 +3,10 @@ os:
   - linux
   - osx
 julia:
-  - 0.6
+  - 0.7
+  - 1.0
+  - 1.1
   - nightly
-script:
-  - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
-  - julia --check-bounds=yes -e 'Pkg.clone(pwd()); Pkg.build("Bravais"); Pkg.test("Bravais"; coverage=true)'
-after_success:
-  - julia -e 'cd(Pkg.dir("Bravais")); Pkg.add("Coverage"); using Coverage; Coveralls.submit(Coveralls.process_folder())'
+matrix:
+  allow_failures:
+    - julia: nightly
