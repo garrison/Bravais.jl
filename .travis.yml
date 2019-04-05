@@ -10,8 +10,3 @@ julia:
 matrix:
   allow_failures:
     - julia: nightly
-#script:
-#  - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
-#  - julia --check-bounds=yes -e 'import Pkg; Pkg.clone(pwd()); Pkg.build("Bravais"); Pkg.test("Bravais"; coverage=true)'
-#after_success:
-#  - julia -e 'import Pkg; import Bravais; cd(joinpath(dirname(pathof(Bravais)), "..")); Pkg.add("Coverage"); using Coverage; Coveralls.submit(Coveralls.process_folder())'
