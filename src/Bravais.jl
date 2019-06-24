@@ -215,7 +215,7 @@ import Base: findfirst
 @deprecate findfirst(lattice::AbstractLattice, site::AbstractVector{Int}) findfirst(isequal(site), lattice)
 
 function Base.iterate(lattice::Union{AbstractBravaisLattice{Dprime},AbstractLatticeWithBasis{D,Dprime} where D}, site::SVector{Dprime,Int}=zeros(SVector{Dprime,Int}))::Union{Nothing,NTuple{2,SVector{Dprime,Int}}} where {Dprime}
-    newsite = MVector{Dprime,Int}(site)
+    newsite = site
     mc = maxcoords(lattice)
     # XXX FIXME @assert something # otherwise BoundsError!
     @assert length(mc) == Dprime >= 1
@@ -223,15 +223,15 @@ function Base.iterate(lattice::Union{AbstractBravaisLattice{Dprime},AbstractLatt
         return nothing
     end
     for i in Dprime:-1:2
-        newsite[i] += 1
+        newsite = setindex(newsite, newsite[i] + 1, i)
         if newsite[i] == mc[i]
-            newsite[i] = 0
+            newsite = setindex(newsite, 0, i)
         else
-            return site, SVector(newsite)
+            return site, newsite
         end
     end
-    newsite[1] += 1
-    return site, SVector(newsite)
+    newsite = setindex(newsite, newsite[1] + 1, 1)
+    return site, newsite
 end
 
 # FIXME: can we return readonly array views/proxies of some of the
@@ -545,8 +545,7 @@ function siteneighbors(f, lattice::HypercubicLattice{D}, ridx::Integer, ::Type{V
     site = lattice[ridx]
 
     for i in 1:D
-        newsite = MVector(site)
-        newsite[i] += 1
+        newsite = setindex(site, site[i] + 1, i)
         if M[i,i] <= 1 && newsite[i] >= mc[i]
             # In directions w/ OBC or length one, do not provide the neighbors!
             continue
