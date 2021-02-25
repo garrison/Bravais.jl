@@ -728,7 +728,22 @@ struct LatticeTranslationCache{LatticeType<:AbstractLattice}
     end
 end
 
-translateη(ltrc::LatticeTranslationCache, j::Integer) = ltrc.cache[j]
+struct SiteNetworkTranslationCache
+    cache::Vector{Tuple{Int,Rational{Int}}}
+
+    function SiteNetworkTranslationCache(permutation)
+        isperm(permutation) || throw(ArgumentError("not a valid permutation"))
+        cache = Tuple{Int,Rational{Int}}[]
+        sizehint!(cache, length(permutation))
+        for j in permutation
+            # XXX: for simplicity we assume all phases are zero; but we can easily take it as argument
+            push!(cache, (j, 0//1))
+        end
+        new(cache)
+    end
+end
+
+translateη(ltrc::Union{LatticeTranslationCache,SiteNetworkTranslationCache}, j::Integer) = ltrc.cache[j]
 translateη(ltrc::LatticeTranslationCache, site::AbstractVector{Int}) = translateη(ltrc, findfirst(isequal(site), ltrc.lattice)::Int)
 
 #= End cache objects =#
@@ -777,6 +792,7 @@ export
     isbipartite,
     istripartite,
     sublattice_index,
-    LatticeTranslationCache
+    LatticeTranslationCache,
+    SiteNetworkTranslationCache
 
 end # module
