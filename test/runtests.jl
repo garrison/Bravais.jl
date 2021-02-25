@@ -3,6 +3,7 @@ using Test
 
 import StaticArrays
 using LinearAlgebra
+using FastClosures
 
 debug = false
 
@@ -220,7 +221,7 @@ end
 
 function test_neighbors(lattice, pairs, neigh=Val{1})
     mypairs = Set(pairs)
-    neighbors(lattice, neigh) do i, j, η
+    @closure neighbors(lattice, neigh) do i, j, η
         pop!(mypairs, (i, j))
         # FIXME: check that η is correct
     end
@@ -395,7 +396,7 @@ function test_neighbor_sublattices(lattice, allowed, neigh=Val{1})
     @inferred isbipartite(lattice)
     @inferred istripartite(lattice)
 
-    neighbors(lattice, neigh) do i, j, wrap
+    @closure neighbors(lattice, neigh) do i, j, wrap
         ind1 = @inferred sublattice_index(lattice, i)
         ind2 = sublattice_index(lattice, j)
         @test ind1 in allowed
@@ -507,7 +508,7 @@ let lattice = KagomeLattice([4,3])
 end
 
 function test_neighbor_distances(lattice, neigh=Val{1}, expected_squared=1)
-    neighbors(lattice, neigh) do i, j, wrap
+    @closure neighbors(lattice, neigh) do i, j, wrap
         diff = realspace(lattice, i) - realspace(lattice, j) - realspace(bravais(lattice), wrap .* dimensions(lattice))
         dist_squared = dot(diff, diff)
         @test expected_squared ≈ dist_squared atol=1e-8

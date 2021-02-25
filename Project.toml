@@ -5,6 +5,7 @@ version = "0.0.0"
 [deps]
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
+FastClosures = "9aa1b823-49e4-5ca5-8b0f-3971ec8bab6a"
 
 [compat]
 julia = "0.7, 1"

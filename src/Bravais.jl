@@ -17,6 +17,7 @@ module Bravais
 
 using StaticArrays
 using LinearAlgebra
+using FastClosures
 
 include("delegate.jl")
 
@@ -407,7 +408,7 @@ function neighbors(f, lattice::AbstractLattice, neigh=Val{1})
 end
 
 function neighborsη(f, lattice::AbstractLattice, neigh=Val{1})
-    neighbors(lattice, neigh) do idx1, idx2, wrap
+    @closure neighbors(lattice, neigh) do idx1, idx2, wrap
         η = dot(wrap, twist(lattice))
         f(idx1, idx2, η)
     end
