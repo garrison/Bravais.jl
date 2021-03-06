@@ -181,7 +181,7 @@ Base.size(lattice::LatticeImplUnion) = (lattice.N_tot,)
 Base.size(lattice::WrappedLatticeUnion) = size(lattice.lattice)
 
 function Base.getindex(lattice::Union{AbstractBravaisLattice{Dprime},AbstractLatticeWithBasis{D,Dprime} where D}, index::Integer) where {Dprime}
-    checkbounds(lattice, index)
+    @boundscheck checkbounds(lattice, index)
     # Alternatively: return [rowmajor_ind2sub(tuple(maxcoords(lattice)...), index)...] - 1
     strides = _strides(lattice)
     @assert length(strides) == Dprime
