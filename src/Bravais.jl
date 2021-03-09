@@ -244,6 +244,7 @@ dimensions(lattice::BravaisLattice) = lattice.N  # FIXME: rename this `extent`?
 dimensions(lattice::LatticeWithBasis) = dimensions(bravais(lattice))
 dimensions(lattice::WrappedLatticeUnion) = dimensions(lattice.lattice)
 
+ndimensions(::AbstractSiteNetwork) = 0
 ndimensions(::AbstractLattice{D}) where {D} = D
 
 twist(lattice::BravaisLattice) = lattice.η
