@@ -185,14 +185,14 @@ function Base.getindex(lattice::Union{AbstractBravaisLattice{Dprime},AbstractLat
     # Alternatively: return [rowmajor_ind2sub(tuple(maxcoords(lattice)...), index)...] - 1
     strides = _strides(lattice)
     @assert length(strides) == Dprime
-    rv = MVector{Dprime,Int}(undef)
+    rv = zeros(SVector{Dprime,Int})
     r = index - 1
     for i in 1:Dprime-1
         d, r = divrem(r, strides[i])
-        rv[i] = d
+        rv = setindex(rv, d, i)
     end
-    rv[end] = r
-    return SVector(rv)
+    rv = setindex(rv, r, Dprime)
+    return rv
 end
 
 function Base.in(site::AbstractVector{Int}, lattice::AbstractLattice)
