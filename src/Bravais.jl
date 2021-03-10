@@ -354,6 +354,50 @@ function wraparound_site!(lattice::LatticeImplUnion{D}, site::AbstractVector{Int
     return site, wrap
 end
 
+function wraparound_site(lattice::LatticeImplUnion{D}, site::SVector{Dprime,Int} where Dprime) where {D}
+    mc = maxcoords(lattice)
+    length(site) == length(mc) || throw(ArgumentError(""))
+
+    # For lattice w/ basis, make sure the last index is in range, as
+    # we cannot wrap it around.
+    if isa(lattice, LatticeWithBasis)
+        if !(0 <= site[end] < mc[end])
+            throw(ArgumentError("Site has invalid basis index."))
+        end
+    end
+
+    wrap = zeros(SVector{D,Int})
+
+    N = bravais(lattice).N
+    M = bravais(lattice).M
+
+    # FIXME: use a @generated function to unroll
+    for i in D:-1:1
+        if !(0 <= site[i] < N[i])
+            if M[i,i] != 0
+                # periodic/twisted BC's in this direction
+                wrap = setindex(wrap, fld(site[i], N[i]), i)
+                for j in 1:i
+                    site = setindex(site, site[j] - wrap[i] * M[i,j], j)
+                end
+            else
+                # OBC in this direction
+                #
+                # XXX: This does not provide any exception guarantee.
+                # If we wanted, we could easily undo what we had done
+                # before throwing.  (Additionally, any mutating
+                # functions that call this may also wish to undo their
+                # side effects before propagating the exception.)
+                throw(ArgumentError("This lattice has open boundary conditions in the direction we are trying to wraparound!"))
+            end
+        end
+    end
+
+    return site, wrap
+end
+
+wraparound_site(lattice::WrappedLatticeUnion, site::SVector{Dprime,Int} where Dprime) = wraparound_site(lattice.lattice, site)
+
 wraparound_site!(lattice::WrappedLatticeUnion, site::AbstractVector{Int}) = wraparound_site!(lattice.lattice, site)
 
 function wraparound_site(lattice::Union{AbstractBravaisLattice{Dprime},AbstractLatticeWithBasis{D,Dprime} where D}, site::AbstractVector{Int}) where {Dprime}
