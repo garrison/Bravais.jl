@@ -512,8 +512,7 @@ struct HypercubicLattice{D,Dsq} <: WrappedBravaisLattice{D}
                 # Attempt to go across the boundary in the `i`
                 # direction, and test if the site is on the same
                 # sublattice after being wrapped around.
-                site1 = zeros(SVector{D,Int})
-                setindex(site1, N[i], i)
+                site1 = setindex(zeros(SVector{D,Int}), N[i], i)
                 site2, = wraparound_site(bravaislattice, site1)
                 if _hypercubic_sublattice_index(site1) != _hypercubic_sublattice_index(site2)
                     bipartite = false
