@@ -266,6 +266,7 @@ primvecs(lattice::BravaisLattice) = lattice.a
 "Return the primitive vectors of the reciprocal lattice"
 recivecs(lattice::BravaisLattice) = lattice.b
 
+nmomenta(::AbstractSiteNetwork) = 1
 nmomenta(lattice::BravaisLattice) = length(lattice.momenta)
 nmomenta(lattice::WrappedBravaisLattice) = nmomenta(lattice.lattice)
 
