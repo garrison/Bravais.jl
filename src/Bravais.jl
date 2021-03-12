@@ -274,9 +274,9 @@ eachmomentumindex(lattice::AbstractBravaisLattice) = 1:nmomenta(lattice)
 
 # FIXME: need a way to iterate momenta
 
-function momentum(::AbstractSiteNetwork, idx::Integer, charge::Integer=0)
+function momentum(::AbstractSiteNetwork, args...)
     # There is just one momentum
-    @assert idx == 1
+    @assert args[1] == 1
     SVector{0,Int}[]
 end
 
