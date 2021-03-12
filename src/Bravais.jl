@@ -274,6 +274,12 @@ eachmomentumindex(lattice::AbstractBravaisLattice) = 1:nmomenta(lattice)
 
 # FIXME: need a way to iterate momenta
 
+function momentum(::AbstractSiteNetwork, idx::Integer, charge::Integer=0)
+    # There is just one momentum
+    @assert idx == 1
+    SVector{0,Int}[]
+end
+
 momentum(lattice::BravaisLattice, idx::Integer) = lattice.momenta[idx]
 function momentum(lattice::BravaisLattice{D}, idx::Integer, charge::Integer)::SVector{D,Rational{Int}} where {D}
     # "total momentum", really.  note that this may return things greater than one.
@@ -294,6 +300,7 @@ function momentum(lattice::BravaisLattice{D}, idx::Integer, charge::Integer)::SV
     return x1 + offsets
 end
 
+kdotr(::AbstractSiteNetwork, k, r) = 0 # always zero since there is just one momentum
 kdotr(lattice::BravaisLattice, ksite::AbstractVector{Rational{Int}}, site::AbstractVector{Int}) = 2pi * dot(ksite, site)
 kdotr(lattice::BravaisLattice, kidx::Integer, site::AbstractVector{Int}) = kdotr(lattice, momentum(lattice, kidx), site)
 kdotr(lattice::BravaisLattice, k, ridx::Integer) = kdotr(lattice, k, lattice[ridx])
