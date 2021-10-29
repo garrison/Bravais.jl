@@ -221,7 +221,7 @@ end
 
 function test_neighbors(lattice, pairs, neigh=Val{1})
     mypairs = Set(pairs)
-    @closure neighbors(lattice, neigh) do i, j, η
+    @closure neighborsη(lattice, neigh) do i, j, η
         pop!(mypairs, (i, j))
         # FIXME: check that η is correct
     end

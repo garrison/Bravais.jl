@@ -13,7 +13,7 @@ We cannot address (or store information about) an infinite number of points on a
 .. todo::
    Diagrams of the above cases may be quite useful here.
 
-Let's get a bit more mathmatical.  Given positive integers :math:`N_1, \ldots, N_D` along with the primitive vectors :math:`\mathbf{a}_i`, we define a finite lattice with :math:`N_\mathrm{tot}=\prod_{i=1}^D N_i` sites, each site given by :math:`\mathbf{r}_\alpha = \sum_{i=1}^D n_i \mathbf{a}_i` where :math:`n_i \in \mathbb{Z}_{N_i}` and :math:`\alpha = 1, \ldots, N_\mathrm{tot}`.  (We will refer to :math:`\alpha` as the "index" of the site, and :math:`(n_1, \ldots, n_D)` as the "site label.")
+Let's get a bit more mathematical.  Given positive integers :math:`N_1, \ldots, N_D` along with the primitive vectors :math:`\mathbf{a}_i`, we define a finite lattice with :math:`N_\mathrm{tot}=\prod_{i=1}^D N_i` sites, each site given by :math:`\mathbf{r}_\alpha = \sum_{i=1}^D n_i \mathbf{a}_i` where :math:`n_i \in \mathbb{Z}_{N_i}` and :math:`\alpha = 1, \ldots, N_\mathrm{tot}`.  (We will refer to :math:`\alpha` as the "index" of the site, and :math:`(n_1, \ldots, n_D)` as the "site label.")
 
 At this point, the finite lattice only represents a subset of the original lattice sites.  For the case of periodic boundary conditions, we would like to repeat our "finite" lattice, tiling it throughout the lattice such that every site of our original infinite lattice is represented by some site on our finite lattice.
 
